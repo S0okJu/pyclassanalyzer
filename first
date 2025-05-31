@@ -1,0 +1,379 @@
+# import ast
+# import os
+# from collections import defaultdict
+
+# class ClassAnalyzer(ast.NodeVisitor):
+#     def __init__(self):
+#         self.inheritance = defaultdict(list)       # 클래스 상속 관계
+#         self.composition = defaultdict(set)        # 클래스 조합 관계 (has-a)
+#         self.class_modules = {}                     # 클래스명(전체) -> 모듈명
+#         self.class_name_to_full = {}                # 단순 클래스명 -> 전체 클래스명 매핑
+#         self.current_class = None
+#         self.current_module = None
+#         self.packages = set()                       # 패키지명 집합
+#         self.external_classes = set()               # 외부 클래스 집합
+#         self.module_to_file = {}                    # 모듈명 -> 파일명+확장자 매핑
+#         self.imports = defaultdict(dict)            # 모듈별 import 정보
+#         self.project_modules = set()                # 프로젝트 내 모듈 집합
+
+#     def visit_Import(self, node):
+#         """import 문 처리"""
+#         for alias in node.names:
+#             module_name = alias.name
+#             alias_name = alias.asname if alias.asname else alias.name
+#             self.imports[self.current_module][alias_name] = module_name
+            
+#             # 외부 라이브러리 판정 (표준 라이브러리나 서드파티 라이브러리)
+#             if not self._is_internal_module(module_name):
+#                 # 해당 모듈의 모든 클래스를 외부로 간주
+#                 pass  # 실제 클래스 사용 시점에서 판정
+
+#     def visit_ImportFrom(self, node):
+#         """from ... import ... 문 처리"""
+#         if node.module:
+#             for alias in node.names:
+#                 imported_name = alias.name
+#                 alias_name = alias.asname if alias.asname else alias.name
+#                 full_name = f"{node.module}.{imported_name}"
+#                 self.imports[self.current_module][alias_name] = full_name
+                
+#                 # 외부 라이브러리에서 import한 클래스인지 판정
+#                 if not self._is_internal_module(node.module):
+#                     self.external_classes.add(alias_name)
+
+#     def _is_internal_module(self, module_name):
+#         """모듈이 프로젝트 내부 모듈인지 판정"""
+#         if not module_name:
+#             return True
+            
+#         # 상대 import (., ..)로 시작하면 내부 모듈
+#         if module_name.startswith('.'):
+#             return True
+            
+#         # 프로젝트 내 모듈들과 비교
+#         module_parts = module_name.split('.')
+        
+#         # 첫 번째 부분이 프로젝트 패키지 중 하나와 일치하면 내부
+#         if module_parts[0] in self.packages:
+#             return True
+            
+#         # 알려진 프로젝트 모듈과 일치하면 내부
+#         if module_name in self.project_modules:
+#             return True
+            
+#         # 표준 라이브러리나 외부 라이브러리로 간주
+#         return False
+
+#     def visit_ClassDef(self, node):
+#         class_name = f"{self.current_module}.{node.name}" if self.current_module else node.name
+#         self.class_modules[class_name] = self.current_module if self.current_module else ""
+
+#         # 단순 클래스명 매핑 추가 (동일한 단순명이 있으면 전체명으로 구분)
+#         simple_name = node.name
+#         if simple_name in self.class_name_to_full:
+#             # 이미 존재하는 경우, 전체명으로 구분
+#             existing_full = self.class_name_to_full[simple_name]
+#             print(f"Warning: Duplicate class name '{simple_name}' found. "
+#                   f"Existing: {existing_full}, New: {class_name}")
+#         self.class_name_to_full[simple_name] = class_name
+
+#         # 상속관계 분석
+#         bases = [self.get_base_name(base) for base in node.bases]
+#         for base in bases:
+#             # import된 클래스인지 확인
+#             if base in self.imports.get(self.current_module, {}):
+#                 imported_full_name = self.imports[self.current_module][base]
+#                 # 외부 라이브러리에서 import된 클래스인지 확인
+#                 if not self._is_internal_import(imported_full_name):
+#                     self.external_classes.add(base)
+#                     self.inheritance[class_name].append(base)
+#                 else:
+#                     # 내부 모듈의 클래스 - 전체 이름으로 매핑
+#                     base_full = self.class_name_to_full.get(base, base)
+#                     self.inheritance[class_name].append(base_full)
+#             else:
+#                 # import되지 않은 클래스 - 프로젝트 내에서 찾기
+#                 base_full = self.class_name_to_full.get(base, base)
+#                 if base_full in self.class_modules:
+#                     # 프로젝트 내 클래스 발견
+#                     self.inheritance[class_name].append(base_full)
+#                 elif base in self.class_name_to_full:
+#                     # 단순명으로 매핑된 클래스 발견
+#                     self.inheritance[class_name].append(self.class_name_to_full[base])
+#                 else:
+#                     # 정의되지 않은 클래스는 외부로 간주
+#                     self.external_classes.add(base)
+#                     self.inheritance[class_name].append(base)
+
+#         self.current_class = class_name
+#         self.generic_visit(node)
+#         self.current_class = None
+
+#     def _is_internal_import(self, imported_name):
+#         """import된 이름이 내부 모듈에서 온 것인지 판정"""
+#         if '.' in imported_name:
+#             module_part = imported_name.rsplit('.', 1)[0]
+#             return self._is_internal_module(module_part)
+#         return self._is_internal_module(imported_name)
+
+#     def visit_Assign(self, node):
+#         # self.xxx = SomeClass(...)
+#         if isinstance(node.targets[0], ast.Attribute):
+#             attr = node.targets[0]
+#             if isinstance(attr.value, ast.Name) and attr.value.id == 'self':
+#                 if isinstance(node.value, ast.Call):
+#                     if isinstance(node.value.func, ast.Name):
+#                         member_class_short = node.value.func.id
+#                         if self.current_class:
+#                             # import된 클래스인지 확인
+#                             if member_class_short in self.imports.get(self.current_module, {}):
+#                                 imported_full_name = self.imports[self.current_module][member_class_short]
+#                                 if not self._is_internal_import(imported_full_name):
+#                                     self.external_classes.add(member_class_short)
+#                                 else:
+#                                     # 내부 클래스
+#                                     member_class = self.class_name_to_full.get(member_class_short, member_class_short)
+#                                     self.composition[self.current_class].add(member_class)
+#                             elif member_class_short in self.class_name_to_full:
+#                                 # 프로젝트 내 클래스
+#                                 member_class = self.class_name_to_full[member_class_short]
+#                                 self.composition[self.current_class].add(member_class)
+#                             else:
+#                                 # 정의되지 않은 클래스는 외부로 처리
+#                                 self.external_classes.add(member_class_short)
+#         self.generic_visit(node)
+
+#     def get_base_name(self, base):
+#         if isinstance(base, ast.Name):
+#             return base.id
+#         try:
+#             return ast.unparse(base)
+#         except Exception:
+#             return str(base)
+
+#     def analyze_directory(self, path):
+#         # 1단계: 프로젝트 구조 파악
+#         self._collect_project_structure(path)
+        
+#         # 2단계: 모든 파일을 먼저 순회해서 클래스 정보 수집
+#         all_files = []
+#         for root, _, files in os.walk(path):
+#             for file in files:
+#                 if file.endswith('.py') and file != '__init__.py':
+#                     full_path = os.path.join(root, file)
+#                     rel_path = os.path.relpath(full_path, path)
+#                     module_path_without_ext = os.path.splitext(rel_path)[0]
+#                     module_path = module_path_without_ext.replace(os.path.sep, ".")
+#                     all_files.append((full_path, module_path, file))
+        
+#         # 3단계: 첫 번째 패스 - 클래스 정의만 수집
+#         for full_path, module_path, file in all_files:
+#             self.module_to_file[module_path] = file
+#             self.project_modules.add(module_path)
+            
+#             with open(full_path, 'r', encoding='utf-8') as f:
+#                 try:
+#                     tree = ast.parse(f.read(), filename=file)
+#                     self.current_module = module_path
+#                     # 클래스 정의만 먼저 수집
+#                     for node in ast.walk(tree):
+#                         if isinstance(node, ast.ClassDef):
+#                             class_name = f"{module_path}.{node.name}"
+#                             self.class_modules[class_name] = module_path
+#                             self.class_name_to_full[node.name] = class_name
+#                 except Exception as e:
+#                     print(f"Error in first pass for {full_path}: {e}")
+#                     continue
+        
+#         # 4단계: 두 번째 패스 - 관계 분석
+#         for full_path, module_path, file in all_files:
+#             with open(full_path, 'r', encoding='utf-8') as f:
+#                 try:
+#                     tree = ast.parse(f.read(), filename=file)
+#                     self.current_module = module_path
+#                     self.visit(tree)
+#                 except Exception as e:
+#                     print(f"Error in second pass for {full_path}: {e}")
+#                     continue
+#         self.current_module = None
+
+#     def _collect_project_structure(self, path):
+#         """프로젝트 구조 수집"""
+#         # 패키지 정보 수집
+#         for root, dirs, files in os.walk(path):
+#             if '__init__.py' in files:
+#                 rel_path = os.path.relpath(root, path)
+#                 pkg = rel_path.replace(os.path.sep, ".") if rel_path != '.' else ''
+#                 if pkg:
+#                     self.packages.add(pkg)
+        
+#         # 최상위 디렉토리명도 패키지로 간주 (일반적인 프로젝트 구조)
+#         project_root_name = os.path.basename(os.path.abspath(path))
+#         if project_root_name and project_root_name != '.':
+#             self.packages.add(project_root_name)
+
+#     def save_plantuml_diagram(self, filename="class_diagram.puml"):
+#         modules = defaultdict(list)
+#         for cls, mod in self.class_modules.items():
+#             modules[mod].append(cls)
+
+#         # 패키지 트리 생성 - 단순화된 접근
+#         tree = {}
+        
+#         # 먼저 모든 모듈을 순회하면서 트리 구조 생성
+#         for mod, classes in modules.items():
+#             if not mod:
+#                 continue
+                
+#             parts = mod.split('.')
+#             current_node = tree
+            
+#             # 패키지 부분들을 처리 (마지막 파일명 제외)
+#             for i in range(len(parts) - 1):
+#                 package_name = parts[i]
+#                 if package_name not in current_node:
+#                     current_node[package_name] = {}
+#                 current_node = current_node[package_name]
+            
+#             # 마지막 부분(파일)을 _files에 추가
+#             if '_files' not in current_node:
+#                 current_node['_files'] = []
+#             current_node['_files'].append(mod)
+
+#         def sanitize(name):
+#             return "".join(c if c.isalnum() else "_" for c in name)
+
+#         with open(filename, "w", encoding="utf-8") as f:
+#             f.write("@startuml\n\n")
+
+#             f.write('skinparam class {\n')
+#             f.write('  BackgroundColor<<External>> LightBlue\n')
+#             f.write('}\n\n')
+
+#             # 중복 방지를 위한 집합들
+#             declared_classes = set()
+#             declared_relationships = set()
+
+#             def declare_class(cls_name, external=False):
+#                 cls_id = sanitize(cls_name)
+#                 if cls_id not in declared_classes:
+#                     declared_classes.add(cls_id)
+#                     simple_name = cls_name.split(".")[-1]
+#                     if external:
+#                         f.write(f'class {cls_id} as "{simple_name}" <<External>>\n')
+#                     else:
+#                         f.write(f'class {cls_id} as "{simple_name}"\n')
+#                 return cls_id
+
+#             def write_tree(node, indent=0):
+#                 indent_str = "  " * indent
+                
+#                 # 파일들 처리
+#                 if '_files' in node:
+#                     for mod in node['_files']:
+#                         if mod in self.module_to_file:
+#                             file_name = self.module_to_file[mod]
+#                             # .py 확장자 제거
+#                             file_name_without_ext = os.path.splitext(file_name)[0]
+#                         else:
+#                             module_parts = mod.split('.')
+#                             file_name_without_ext = module_parts[-1]
+                        
+#                         escaped_file_name = f'"{file_name_without_ext}"' if '.' in file_name_without_ext else file_name_without_ext
+#                         f.write(f'{indent_str}frame {escaped_file_name} {{\n')
+                        
+#                         # 해당 모듈의 클래스들 선언
+#                         for cls in modules.get(mod, []):
+#                             cls_id = sanitize(cls)
+#                             simple_name = cls.split(".")[-1]
+#                             f.write(f'{indent_str}  class {cls_id} as "{simple_name}"\n')
+                        
+#                         f.write(f'{indent_str}}}\n\n')
+                
+#                 # 하위 패키지들 처리
+#                 for key, subnode in node.items():
+#                     if key == '_files':
+#                         continue
+#                     escaped_package_name = f'"{key}"' if '.' in key else key
+#                     f.write(f'{indent_str}package {escaped_package_name} <<Folder>> {{\n')
+#                     write_tree(subnode, indent + 1)
+#                     f.write(f'{indent_str}}}\n\n')
+
+#             write_tree(tree)
+
+#             # 외부 클래스들은 상속 관계에서만 필요할 때 선언됨 (별도 선언 제거)
+
+#             # 상속 관계 그리기 (중복 방지)
+#             for child, parents in self.inheritance.items():
+#                 child_id = sanitize(child)
+#                 for parent in parents:
+#                     # 부모 클래스가 외부 클래스인지 확인
+#                     if parent in self.external_classes:
+#                         parent_id = sanitize(parent)
+#                         # 외부 클래스는 별도로 선언
+#                         if parent_id not in declared_classes:
+#                             declare_class(parent, external=True)
+#                     else:
+#                         # 내부 클래스는 이미 프레임 안에 선언되어 있음
+#                         parent_id = sanitize(parent)
+                    
+#                     relationship = f"{parent_id} <|-- {child_id}"
+#                     if relationship not in declared_relationships:
+#                         declared_relationships.add(relationship)
+#                         f.write(f"{relationship}\n")
+
+#             # 포함 관계 그리기 (중복 방지)
+#             for cls, members in self.composition.items():
+#                 cls_id = sanitize(cls)
+#                 for member in members:
+#                     # 멤버 클래스가 외부 클래스인지 확인
+#                     if member in self.external_classes:
+#                         member_id = sanitize(member)
+#                         # 외부 클래스는 별도로 선언
+#                         if member_id not in declared_classes:
+#                             declare_class(member, external=True)
+#                     else:
+#                         # 내부 클래스는 이미 프레임 안에 선언되어 있음
+#                         member_id = sanitize(member)
+                    
+#                     relationship = f"{cls_id} --> {member_id} : has-a"
+#                     if relationship not in declared_relationships:
+#                         declared_relationships.add(relationship)
+#                         f.write(f"{relationship}\n")
+
+#             f.write("\n@enduml\n")
+
+#     def print_analysis_summary(self):
+#         """분석 결과 요약 출력"""
+#         print("\n=== 분석 결과 요약 ===")
+#         print(f"발견된 패키지 수: {len(self.packages)}")
+#         print(f"발견된 클래스 수: {len(self.class_modules)}")
+#         print(f"외부 클래스 수: {len(self.external_classes)}")
+#         print(f"상속 관계 수: {sum(len(parents) for parents in self.inheritance.values())}")
+#         print(f"조합 관계 수: {sum(len(members) for members in self.composition.values())}")
+        
+#         print("\n패키지 목록:")
+#         for pkg in sorted(self.packages):
+#             print(f"  - {pkg}")
+        
+#         print("\n외부 클래스 목록:")
+#         for ext_cls in sorted(self.external_classes):
+#             print(f"  - {ext_cls}")
+        
+#         print("\n모듈별 import 정보:")
+#         for mod, imports in self.imports.items():
+#             if imports:
+#                 print(f"  {mod}:")
+#                 for alias, full_name in imports.items():
+#                     print(f"    - {alias} -> {full_name}")
+
+
+# if __name__ == "__main__":
+#     analyzer = ClassAnalyzer()
+#     target_path = './sample'  # 분석 대상 경로 지정
+    
+#     print(f"분석 시작: {target_path}")
+#     analyzer.analyze_directory(target_path)
+#     analyzer.save_plantuml_diagram("class_diagram.puml")
+#     analyzer.print_analysis_summary()
+#     print("\nPlantUML diagram saved to class_diagram.puml")
