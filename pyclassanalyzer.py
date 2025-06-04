@@ -617,6 +617,6 @@ class ClassAnalyzer(ast.NodeVisitor):
 
 if __name__ == "__main__":
     analyzer = ClassAnalyzer()
-    analyzer.analyze_directory('./pyclass_analyzer')
+    analyzer.analyze_directory('./pyclassanalyzer')
     analyzer.save_plantuml_diagram()
     analyzer.print_analysis_summary()
