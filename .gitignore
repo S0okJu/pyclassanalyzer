@@ -16,3 +16,5 @@ __pycache__/
 pyclassanalyzer.egg-info/
 
 class_diagram.puml
+
+__pycache__
