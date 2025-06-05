@@ -1,0 +1,125 @@
+@startuml
+
+skinparam class {
+  BackgroundColor<<External>> LightBlue
+}
+
+package utils <<Folder>> {
+  frame plantuml_formatter {
+    class utils_plantuml_formatter_PlantUMLFormatter as "PlantUMLFormatter" {
+      +analyzer
+      --
+      #__init__()
+      +save_plantuml_diagram(filename, ...)
+    }
+  }
+
+}
+
+package models <<Folder>> {
+  frame module_info {
+    class models_module_info_ModuleInfo as "ModuleInfo" {
+      +is_package {property}
+      --
+      +add_import(alias, full_name)
+      +add_class(class_name)
+    }
+  }
+
+  frame class_info {
+    class models_class_info_AttributeInfo as "AttributeInfo" {
+    }
+    class models_class_info_MethodInfo as "MethodInfo" {
+    }
+    class models_class_info_ClassInfo as "ClassInfo" {
+      +simple_name {property}
+      --
+      +add_attribute(attr_info)
+      +add_method(method_info)
+      +add_base(base)
+      +add_composition(member)
+    }
+  }
+
+}
+
+package analyzer <<Folder>> {
+  frame ast_visitor {
+    class analyzer_ast_visitor_ASTVisitor as "ASTVisitor" {
+      +module_info
+      +project_analyzer: NoneType
+      +current_class: NoneType
+      --
+      #__init__()
+      +visit_Import(node)
+      +visit_ImportFrom(node)
+      +visit_ClassDef(node)
+      +visit_Assign(node)
+      #_analyze_class_members(node)
+      #_analyze_class_attribute(node)
+      #_analyze_method(node)
+      #_analyze_init_method(node)
+      #_get_attribute_type(value_node)
+      #_get_visibility(name)
+      #_get_base_name(base)
+    }
+  }
+
+  frame class_analyzer {
+    class analyzer_class_analyzer_ClassAnalyzer as "ClassAnalyzer" {
+      +inheritance: defaultdict
+      +composition: defaultdict
+      +class_modules: dict
+      +class_name_to_full: dict
+      +current_class: NoneType
+      +current_module: NoneType
+      +packages: set
+      +external_classes: set
+      +module_to_file: dict
+      +imports: defaultdict
+      +project_modules: set
+      +class_attributes: defaultdict
+      +class_methods: defaultdict
+      +project_analyzer: ProjectStructureAnalyzer
+      --
+      #__init__()
+      +visit_Import(node)
+      +visit_ImportFrom(node)
+      #_is_internal_module(module_name)
+      +visit_ClassDef(node)
+      #_analyze_class_members(node, class_name)
+      #_analyze_init_method(init_node)
+      #_analyze_method_for_attributes(method_node)
+      #_get_attribute_type(value_node)
+      #_get_visibility(name)
+      #_is_internal_import(imported_name)
+      +visit_Assign(node)
+      +get_base_name(base)
+      +analyze_directory(path)
+      #_collect_project_structure(path)
+      #_format_attribute_for_plantuml(attr_name, attr_info)
+      #_format_method_for_plantuml(method_info)
+      +save_plantuml_diagram(filename, ...)
+      +print_analysis_summary()
+    }
+  }
+
+  frame project_structure {
+    class analyzer_project_structure_ProjectStructureAnalyzer as "ProjectStructureAnalyzer" {
+      +packages: set
+      +modules: set
+      +project_root: str
+      --
+      #__init__()
+      +analyze(path)
+      #_collect_project_structure(path)
+    }
+  }
+
+}
+
+class ast_NodeVisitor as "NodeVisitor" <<External>>
+ast_NodeVisitor <|-- analyzer_ast_visitor_ASTVisitor
+ast_NodeVisitor <|-- analyzer_class_analyzer_ClassAnalyzer
+
+@enduml

@@ -1,0 +1,96 @@
+Metadata-Version: 2.4
+Name: pyclassanalyzer
+Version: 0.1.0
+Summary: A tool for analyzing Python class structure and generating PlantUML diagrams
+Home-page: https://github.com/yourusername/pyclassanalyzer
+Author: Your Name
+Author-email: your.email@example.com
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-python
+Dynamic: summary
+
+# PyClassAnalyzer
+
+A tool for analyzing Python class structure and generating PlantUML diagrams.
+
+## Features
+
+- Analyzes Python class structure including:
+  - Class inheritance relationships
+  - Class composition relationships
+  - Class attributes and methods
+  - Visibility modifiers (public, protected, private)
+  - Properties and decorators
+- Generates PlantUML class diagrams
+- Supports package structure visualization
+- Identifies external dependencies
+- Provides detailed analysis summary
+
+## Installation
+
+```bash
+pip install pyclassanalyzer
+```
+
+## Usage
+
+### Command Line Interface
+
+```bash
+# Basic usage
+pyclassanalyzer /path/to/project
+
+# Specify output file
+pyclassanalyzer /path/to/project -o diagram.puml
+
+# Exclude attributes or methods
+pyclassanalyzer /path/to/project --no-attributes
+pyclassanalyzer /path/to/project --no-methods
+
+# Print analysis summary
+pyclassanalyzer /path/to/project -s
+```
+
+### Python API
+
+```python
+from pyclassanalyzer import ClassAnalyzer
+
+# Create analyzer
+analyzer = ClassAnalyzer()
+
+# Analyze project
+analyzer.analyze_directory('/path/to/project')
+
+# Generate PlantUML diagram
+analyzer.save_plantuml_diagram('diagram.puml')
+
+# Print analysis summary
+analyzer.print_analysis_summary()
+```
+
+## Requirements
+
+- Python 3.7 or higher
+- PlantUML (for diagram visualization)
+
+## License
+
+MIT License
