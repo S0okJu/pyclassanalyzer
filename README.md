@@ -8,7 +8,7 @@ Automatic Analysis: Parses python codebase to extract class information(attribut
 
 PlantUML Output: Generates class diagrams compatible with PlantUML.
 
-[result](./imgs/result.png)
+![result](./imgs/result.png)
 
 ### Prerequisites
 
