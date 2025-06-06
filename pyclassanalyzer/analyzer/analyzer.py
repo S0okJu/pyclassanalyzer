@@ -1,15 +1,15 @@
 import ast
 from typing import Dict, List, Any
-from ..models.analysis_context import AnalysisContext
+from pyclassanalyzer.types import AnalysisResult
 
 class MemberAnalyzer:
-    """클래스 멤버(속성, 메서드)를 분석하는 클래스"""
+    """Analyze class members (attributes, methods)"""
     
-    def __init__(self, context: AnalysisContext):
-        self.context = context
+    def __init__(self, result: AnalysisResult):
+        self.result = result
 
     def analyze_class_members(self, node: ast.ClassDef, class_name: str) -> None:
-        """클래스 멤버 분석"""
+        """Analyze class members"""
         attributes = {}
         methods = []
         
@@ -19,11 +19,11 @@ class MemberAnalyzer:
             elif isinstance(item, ast.FunctionDef):
                 self._process_method(item, attributes, methods)
         
-        self.context.class_attributes[class_name] = attributes
-        self.context.class_methods[class_name] = methods
+        self.result.class_attributes[class_name] = attributes
+        self.result.class_methods[class_name] = methods
 
     def _process_class_attribute(self, node: ast.Assign, attributes: Dict[str, Any]) -> None:
-        """클래스 속성 처리"""
+        """Process class attribute"""
         for target in node.targets:
             if isinstance(target, ast.Name):
                 attr_name = target.id
@@ -37,7 +37,7 @@ class MemberAnalyzer:
                 }
 
     def _process_method(self, node: ast.FunctionDef, attributes: Dict[str, Any], methods: List[Dict[str, Any]]) -> None:
-        """메서드 처리"""
+        """Process method"""
         method_name = node.name
         visibility = self._get_visibility(method_name)
         decorators = []
@@ -80,7 +80,7 @@ class MemberAnalyzer:
                     attributes[attr_name] = attr_info
 
     def _analyze_init_method(self, node: ast.FunctionDef, attributes: Dict[str, Any]) -> None:
-        """__init__ 메서드 분석"""
+        """Analyze __init__ method"""
         for stmt in ast.walk(node):
             if isinstance(stmt, ast.Assign):
                 for target in stmt.targets:
@@ -97,7 +97,7 @@ class MemberAnalyzer:
                             }
 
     def _analyze_method_for_attributes(self, method_node: ast.FunctionDef) -> Dict[str, Any]:
-        """메서드 내에서 동적으로 생성되는 속성 분석"""
+        """Analyze attributes created dynamically in the method"""
         attributes = {}
         for stmt in ast.walk(method_node):
             if isinstance(stmt, ast.Assign):
@@ -117,7 +117,7 @@ class MemberAnalyzer:
         return attributes
 
     def _get_attribute_type(self, value_node: ast.AST) -> str:
-        """속성의 타입 추론"""
+        """Infer the type of the attribute"""
         if isinstance(value_node, ast.Constant):
             return type(value_node.value).__name__
         elif isinstance(value_node, ast.Str):  # Python < 3.8
@@ -138,7 +138,7 @@ class MemberAnalyzer:
         return 'object'
 
     def _get_visibility(self, name: str) -> str:
-        """멤버의 가시성 결정"""
+        """Determine the visibility of the member"""
         if name.startswith('__') and not name.endswith('__'):
             return 'private'
         elif name.startswith('_'):

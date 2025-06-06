@@ -1,7 +1,5 @@
 """Analyzer package for PyClassAnalyzer."""
 
-from .class_analyzer import ClassAnalyzer
-from .ast_visitor import ASTVisitor
-from .project_structure import ProjectStructureAnalyzer
+from .analyzer import MemberAnalyzer
 
-__all__ = ['ClassAnalyzer', 'ASTVisitor', 'ProjectStructureAnalyzer'] 
+__all__ = ['MemberAnalyzer'] 

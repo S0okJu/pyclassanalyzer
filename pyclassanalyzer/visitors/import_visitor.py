@@ -9,7 +9,7 @@ class ImportVisitor(BaseVisitor):
         for alias in node.names:
             module_name = alias.name
             alias_name = alias.asname if alias.asname else alias.name
-            self.context.imports[self.current_module][alias_name] = module_name
+            self.result.imports[self.current_module][alias_name] = module_name
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
@@ -19,9 +19,9 @@ class ImportVisitor(BaseVisitor):
                 imported_name = alias.name
                 alias_name = alias.asname if alias.asname else imported_name
                 full_name = f"{node.module}.{imported_name}"
-                self.context.imports[self.current_module][alias_name] = full_name
+                self.result.imports[self.current_module][alias_name] = full_name
                 if not self._is_internal_module(node.module):
-                    self.context.external_classes.add(alias_name)
+                    self.result.external_classes.add(alias_name)
         self.generic_visit(node)
 
     def _is_internal_module(self, module_name: str) -> bool:
@@ -31,8 +31,8 @@ class ImportVisitor(BaseVisitor):
         if module_name.startswith('.'):
             return True
         module_parts = module_name.split('.')
-        if module_parts[0] in self.context.packages:
+        if module_parts[0] in self.result.packages:
             return True
-        if module_name in self.context.project_modules:
+        if module_name in self.result.project_modules:
             return True
         return False 

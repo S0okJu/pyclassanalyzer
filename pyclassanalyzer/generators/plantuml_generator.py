@@ -1,18 +1,19 @@
 import os
+from typing import Dict, List
+
 from collections import defaultdict
-from typing import Dict, List, Set
-from pyclassanalyzer.analyzer.models.analysis_context import AnalysisContext
+from pyclassanalyzer.types import AnalysisResult
 
 class PlantUMLGenerator:
     """PlantUML 다이어그램을 생성하는 클래스"""
     
-    def __init__(self, context: AnalysisContext):
-        self.context = context
+    def __init__(self, result: AnalysisResult):
+        self.result = result
 
     def generate_diagram(self, output_file: str = "class_diagram.puml", include_attributes: bool = True, include_methods: bool = True) -> None:
         """PlantUML 다이어그램 생성"""
         modules = defaultdict(list)
-        for cls, mod in self.context.class_modules.items():
+        for cls, mod in self.result.class_modules.items():
             modules[mod].append(cls)
         
         tree = self._build_module_tree(modules)
@@ -65,8 +66,8 @@ class PlantUMLGenerator:
             indent_str = "  " * indent
             if '_files' in node:
                 for mod in node['_files']:
-                    if mod in self.context.module_to_file:
-                        file_name = self.context.module_to_file[mod]
+                    if mod in self.result.module_to_file:
+                        file_name = self.result.module_to_file[mod]
                         file_name_without_ext = os.path.splitext(file_name)[0]
                     else:
                         module_parts = mod.split('.')
@@ -77,15 +78,15 @@ class PlantUMLGenerator:
                         cls_id = cls  # full name 그대로 사용
                         simple_name = cls.split(".")[-1]
                         f.write(f'{indent_str}  class {cls_id} as "{simple_name}" {{\n')
-                        if include_attributes and cls in self.context.class_attributes:
-                            attributes = self.context.class_attributes[cls]
+                        if include_attributes and cls in self.result.class_attributes:
+                            attributes = self.result.class_attributes[cls]
                             if attributes:
                                 for attr_name, attr_info in attributes.items():
                                     attr_line = self._format_attribute(attr_name, attr_info)
                                     f.write(f'{indent_str}    {attr_line}\n')
                                 f.write(f'{indent_str}    --\n')
-                        if include_methods and cls in self.context.class_methods:
-                            methods = self.context.class_methods[cls]
+                        if include_methods and cls in self.result.class_methods:
+                            methods = self.result.class_methods[cls]
                             for method_info in methods:
                                 method_line = self._format_method(method_info)
                                 if method_line:
@@ -115,7 +116,7 @@ class PlantUMLGenerator:
                 else:
                     f.write(f'class {cls_id} as "{simple_name}"\n')
             return cls_id
-        for child, parents in self.context.inheritance.items():
+        for child, parents in self.result.inheritance.items():
             child_id = child  # full name 그대로 사용
             for parent in parents:
                 parent_id = parent  # full name 그대로 사용
@@ -129,7 +130,7 @@ class PlantUMLGenerator:
                 if relationship not in declared_relationships:
                     declared_relationships.add(relationship)
                     f.write(f"{relationship}\n")
-        for cls, members in self.context.composition.items():
+        for cls, members in self.result.composition.items():
             cls_id = cls  # full name 그대로 사용
             for member in members:
                 member_id = member  # full name 그대로 사용
@@ -146,7 +147,7 @@ class PlantUMLGenerator:
 
     def _is_external_class(self, class_name: str) -> bool:
         # class_name이 class_modules에 없으면 외부로 간주
-        return class_name not in self.context.class_modules
+        return class_name not in self.result.class_modules
 
     def _sanitize_name(self, name: str) -> str:
         """이름 정규화"""

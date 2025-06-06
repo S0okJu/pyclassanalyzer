@@ -1,26 +1,30 @@
 import ast
-from typing import List, Set
-from .base_visitor import BaseVisitor
-from ..analyzers.member_analyzer import MemberAnalyzer
+
+from pyclassanalyzer.analyzer import MemberAnalyzer
+from .base_visitor import BaseVisitor # Avoid circular import
 
 class ClassVisitor(BaseVisitor):
-    """클래스 정의를 처리하는 방문자 클래스"""
+    """Visitor class for class definition"""
     
-    def __init__(self, context):
-        super().__init__(context)
-        self.member_analyzer = MemberAnalyzer(context)
+    def __init__(self, result):
+        super().__init__(result)
+        self.member_analyzer = MemberAnalyzer(result)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        """클래스 정의 처리 (항상 full name 사용)"""
-        module_path = self.context.current_module
+        """Parse class definition
+        
+        They should use full name of the class to avoid duplicate class name. 
+        (ex) hello.a vs world.a 
+        """
+        module_path = self.result.current_module
         class_name = f"{module_path}.{node.name}"
-        self.context.class_modules[class_name] = module_path if module_path else ""
+        self.result.class_modules[class_name] = module_path if module_path else ""
         simple_name = node.name
-        if simple_name in self.context.class_name_to_full:
-            existing_full = self.context.class_name_to_full[simple_name]
+        if simple_name in self.result.class_name_to_full:
+            existing_full = self.result.class_name_to_full[simple_name]
             print(f"Warning: Duplicate class name '{simple_name}' found. "
                   f"Existing: {existing_full}, New: {class_name}")
-        self.context.class_name_to_full[simple_name] = class_name
+        self.result.class_name_to_full[simple_name] = class_name
         self._process_class_bases(node, class_name)
         
         # 클래스 멤버 분석
@@ -35,13 +39,13 @@ class ClassVisitor(BaseVisitor):
 
     def _process_class_bases(self, node: ast.ClassDef, class_name: str) -> None:
         """클래스의 상속 관계 처리 (full name만 사용, 디버깅 로그 추가)"""
-        print(f"[DEBUG] class_name_to_full: {self.context.class_name_to_full}")
+        print(f"[DEBUG] class_name_to_full: {self.result.class_name_to_full}")
         bases = [self._get_base_name(base) for base in node.bases]
         for base in bases:
-            base_full = self.context.class_name_to_full.get(base)
-            if base_full and base_full in self.context.class_modules:
+            base_full = self.result.class_name_to_full.get(base)
+            if base_full and base_full in self.result.class_modules:
                 print(f"[DEBUG] Adding inheritance: {class_name} <|-- {base_full}")
-                self.context.inheritance[class_name].append(base_full)
+                self.result.inheritance[class_name].append(base_full)
             else:
                 print(f"[WARNING] base class '{base}' not found as full name in class_modules, skipping relationship for {class_name}.")
 
@@ -54,9 +58,9 @@ class ClassVisitor(BaseVisitor):
                         if isinstance(item.value, ast.Call):
                             if isinstance(item.value.func, ast.Name):
                                 composed_class = item.value.func.id
-                                composed_full = self.context.class_name_to_full.get(composed_class)
-                                if composed_full and composed_full in self.context.class_modules:
-                                    self.context.composition[class_name].add(composed_full)
+                                composed_full = self.result.class_name_to_full.get(composed_class)
+                                if composed_full and composed_full in self.result.class_modules:
+                                    self.result.composition[class_name].add(composed_full)
                                 else:
                                     print(f"[WARNING] composed class '{composed_class}' not found as full name in class_modules, skipping composition for {class_name}.")
             elif isinstance(item, ast.FunctionDef):
@@ -69,9 +73,9 @@ class ClassVisitor(BaseVisitor):
                                         if isinstance(stmt.value, ast.Call):
                                             if isinstance(stmt.value.func, ast.Name):
                                                 composed_class = stmt.value.func.id
-                                                composed_full = self.context.class_name_to_full.get(composed_class)
-                                                if composed_full and composed_full in self.context.class_modules:
-                                                    self.context.composition[class_name].add(composed_full)
+                                                composed_full = self.result.class_name_to_full.get(composed_class)
+                                                if composed_full and composed_full in self.result.class_modules:
+                                                    self.result.composition[class_name].add(composed_full)
                                                 else:
                                                     print(f"[WARNING] composed class '{composed_class}' not found as full name in class_modules, skipping composition for {class_name}.")
 
@@ -98,8 +102,8 @@ class ClassVisitor(BaseVisitor):
         if module_name.startswith('.'):
             return True
         module_parts = module_name.split('.')
-        if module_parts[0] in self.context.packages:
+        if module_parts[0] in self.result.packages:
             return True
-        if module_name in self.context.project_modules:
+        if module_name in self.result.project_modules:
             return True
         return False 
