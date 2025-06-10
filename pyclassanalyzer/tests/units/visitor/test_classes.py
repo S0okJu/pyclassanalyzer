@@ -7,4 +7,4 @@ class TestClassVisitor:
         self.member_analyzer = MagicMock()
     
     def test_visit_ClassDef(self):
-                
+        pass 
