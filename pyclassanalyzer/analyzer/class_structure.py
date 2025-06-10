@@ -4,7 +4,7 @@ from typing import Dict, Set, List
 
 from pyclassanalyzer.types import AnalysisResult
 from pyclassanalyzer.visitors import ImportVisitor, ClassVisitor
-from pyclassanalyzer.analyzer import MemberAnalyzer
+from .member import MemberAnalyzer
 from pyclassanalyzer.generators import PlantUMLGenerator
 
 class ClassAnalyzer:

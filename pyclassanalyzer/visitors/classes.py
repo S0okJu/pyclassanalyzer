@@ -1,7 +1,6 @@
 import ast
-
-from pyclassanalyzer.analyzer import MemberAnalyzer
-from .base_visitor import BaseVisitor # Avoid circular import
+from pyclassanalyzer.analyzer.member import MemberAnalyzer
+from .base import BaseVisitor # Avoid circular import
 
 class ClassVisitor(BaseVisitor):
     """Visitor class for class definition"""

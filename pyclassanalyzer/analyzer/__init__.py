@@ -1,5 +1,4 @@
-"""Analyzer package for PyClassAnalyzer."""
+"""Analyzer package for PyClassAnalyzer.
 
-from .analyzer import MemberAnalyzer
-
-__all__ = ['MemberAnalyzer'] 
+__all__ did not used because of circular import
+"""

@@ -1,6 +1,8 @@
 import ast
 from typing import Dict, List, Any
+
 from pyclassanalyzer.types import AnalysisResult
+
 
 class MemberAnalyzer:
     """Analyze class members (attributes, methods)"""

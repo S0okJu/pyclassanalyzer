@@ -1,16 +1,20 @@
 import ast
-from .base_visitor import BaseVisitor
+from .base import BaseVisitor
 
 class ImportVisitor(BaseVisitor):
     """import 문을 처리하는 방문자 클래스"""
     
+    def __init__(self, result):
+        super().__init__(result)
+    
+
     def visit_Import(self, node: ast.Import) -> None:
         """import 문 처리"""
         for alias in node.names:
             module_name = alias.name
             alias_name = alias.asname if alias.asname else alias.name
             self.result.imports[self.current_module][alias_name] = module_name
-        self.generic_visit(node)
+        self.generic_visit(node)    
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """from ... import 문 처리"""
@@ -24,7 +28,9 @@ class ImportVisitor(BaseVisitor):
                     self.result.external_classes.add(alias_name)
         self.generic_visit(node)
 
+
     def _is_internal_module(self, module_name: str) -> bool:
+        # TODO 프로젝트 명이 포함되는 경우 모두 internal로 처리하기
         """내부 모듈 여부 확인"""
         if not module_name:
             return True
