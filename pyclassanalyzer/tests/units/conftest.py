@@ -1,3 +1,3 @@
-# pytest_plugins = [
-#     "pyclassanalyzer.tests.units.fixtures",
-# ]
+pytest_plugins = [
+    "pyclassanalyzer.tests.units.fixtures",
+]
