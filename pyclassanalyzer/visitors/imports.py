@@ -30,7 +30,6 @@ class ImportVisitor(BaseVisitor):
 
 
     def _is_internal_module(self, module_name: str) -> bool:
-        # TODO 프로젝트 명이 포함되는 경우 모두 internal로 처리하기
         """내부 모듈 여부 확인"""
         if not module_name:
             return True
