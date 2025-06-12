@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-from pyclassanalyzer.analyzer.class_structure import ClassAnalyzer
+from pyclassanalyzer.analyzer.classes import ClassAnalyzer
 
 def main():
     parser = argparse.ArgumentParser(description='Python 클래스 구조 분석 및 PlantUML 다이어그램 생성')
