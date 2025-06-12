@@ -38,11 +38,13 @@ class DummyAnalysisResult:
 @pytest.fixture
 def analyzer(monkeypatch):
     analyzer = ClassAnalyzer()
+    
     analyzer.result = DummyAnalysisResult()
     analyzer.import_visitor = DummyImportVisitor(analyzer.result)
     analyzer.class_visitor = DummyClassVisitor(analyzer.result)
     analyzer.member_analyzer = DummyMemberAnalyzer(analyzer.result)
     analyzer.plantuml_generator = DummyPlantUMLGenerator(analyzer.result)
+    
     return analyzer
 
 def test_analyze_file_sets_current_module_and_visits(tmp_path, analyzer):
