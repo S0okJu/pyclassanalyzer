@@ -43,6 +43,12 @@ class ClassAnalyzer:
         
         all_files = []
         for root, _, files in os.walk(path):
+            
+            # Skip tests file discovery when no_test is True 
+            if no_test and 'tests' in root:
+                continue
+            
+            # file discovery
             for file in files:
                 if file.endswith('.py'):
                     full_path = os.path.join(root, file)
@@ -84,7 +90,7 @@ class ClassAnalyzer:
                     continue
         self.result.current_module = None
 
-    def _collect_project_structure(self, path: str, no_test) -> None:
+    def _collect_project_structure(self, path: str, no_test: bool) -> None:
         """프로젝트 구조 수집"""
         # 패키지 정보 수집
         for root, dirs, files in os.walk(path):
