@@ -7,6 +7,7 @@ from pyclassanalyzer.visitors import ImportVisitor, ClassVisitor
 from .member import MemberAnalyzer
 from pyclassanalyzer.generators import PlantUMLGenerator
 
+
 class ClassAnalyzer:
     """Python 클래스 구조 분석기"""
     
@@ -36,9 +37,10 @@ class ClassAnalyzer:
         except Exception as e:
             print(f"Error analyzing file {file_path}: {e}")
 
-    def analyze_directory(self, path: str) -> None:
+    def analyze_directory(self, path: str, no_test: bool = False) -> None:
         """디렉토리 분석"""
-        self._collect_project_structure(path)
+        self._collect_project_structure(path, no_test)
+        
         all_files = []
         for root, _, files in os.walk(path):
             for file in files:
@@ -48,6 +50,7 @@ class ClassAnalyzer:
                     module_path_without_ext = os.path.splitext(rel_path)[0]
                     module_path = module_path_without_ext.replace(os.path.sep, ".")
                     all_files.append((full_path, module_path, file))
+                    
         # 1차 패스: 모든 클래스의 full name을 미리 수집
         for full_path, module_path, file in all_files:
             self.result.module_to_file[module_path] = file
@@ -81,14 +84,19 @@ class ClassAnalyzer:
                     continue
         self.result.current_module = None
 
-    def _collect_project_structure(self, path: str) -> None:
+    def _collect_project_structure(self, path: str, no_test) -> None:
         """프로젝트 구조 수집"""
         # 패키지 정보 수집
         for root, dirs, files in os.walk(path):
+            
             if '__init__.py' in files:
                 rel_path = os.path.relpath(root, path)
                 pkg = rel_path.replace(os.path.sep, ".") if rel_path != '.' else ''
                 if pkg:
+                    # Except test files
+                    if no_test and 'tests' in pkg.split('.'):
+                        continue
+                    
                     self.result.packages.add(pkg)
         
         # 최상위 디렉토리명도 패키지로 간주 (일반적인 프로젝트 구조)
@@ -96,7 +104,11 @@ class ClassAnalyzer:
         if project_root_name and project_root_name != '.':
             self.result.packages.add(project_root_name)
 
-    def generate_diagram(self, output_file: str = "class_diagram.puml", include_attributes: bool = True, include_methods: bool = True) -> None:
+    def generate_diagram(self, 
+                         output_file: str = "class_diagram.puml", 
+                         include_attributes: bool = True, 
+                         include_methods: bool = True,
+                         ) -> None:
         """PlantUML 다이어그램 생성"""
         self.plantuml_generator.generate_diagram(output_file, include_attributes, include_methods)
 

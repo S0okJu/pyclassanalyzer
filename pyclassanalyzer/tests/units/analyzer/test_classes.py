@@ -89,3 +89,42 @@ def test_analyze_directory_handles_syntax_error(tmp_path, analyzer, capsys):
     analyzer.analyze_directory(str(tmp_path))
     captured = capsys.readouterr()
     assert "Error in first pass for" in captured.out or "Error in second pass for" in captured.out
+
+@pytest.fixture
+def package_test_exist_case(tmp_path):
+    # mypkg 패키지 생성
+    pkg_dir = tmp_path / "mypkg"
+    pkg_dir.mkdir()
+    (pkg_dir / "__init__.py").write_text("", encoding="utf-8")
+    (pkg_dir / "a.py").write_text("class A: pass", encoding="utf-8")
+    (pkg_dir / "b.py").write_text("class B: pass", encoding="utf-8")
+
+    # tests 패키지 및 하위 패키지 생성
+    test_pkg_dir = tmp_path / "tests"
+    test_pkg_dir.mkdir()
+    (test_pkg_dir / "__init__.py").write_text("", encoding="utf-8")
+    (test_pkg_dir / "test_a.py").write_text("class C: pass", encoding="utf-8")
+
+    test_subpackage = test_pkg_dir / "units"
+    test_subpackage.mkdir()
+    (test_subpackage / "__init__.py").write_text("", encoding="utf-8")
+    (test_subpackage / "test_b.py").write_text("class D: pass", encoding="utf-8")
+
+    return tmp_path
+
+def test__collect_project_structure_success_no_test_true(package_test_exist_case, analyzer):
+    
+    analyzer._collect_project_structure(str(package_test_exist_case), no_test=True)
+    
+    assert 'mypkg' in analyzer.result.packages
+    assert 'tests' not in analyzer.result.packages
+    assert 'tests.units' not in analyzer.result.packages
+    
+def test__collect_project_structure_success_no_test_false(package_test_exist_case, analyzer):
+    
+    analyzer._collect_project_structure(str(package_test_exist_case), no_test=False)
+        
+    assert 'mypkg' in analyzer.result.packages    
+    assert 'tests' in analyzer.result.packages
+    assert 'tests.units' in analyzer.result.packages
+    

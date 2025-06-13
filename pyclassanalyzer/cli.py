@@ -10,6 +10,7 @@ def main():
     parser.add_argument('--no-attributes', action='store_true', help='속성 표시 제외')
     parser.add_argument('--no-methods', action='store_true', help='메서드 표시 제외')
     parser.add_argument('--summary', action='store_true', help='분석 결과 요약 출력')
+    parser.add_argument('--no-test', action='store_true',help='테스트 파일 제외')
     
     args = parser.parse_args()
     
@@ -19,13 +20,13 @@ def main():
         if os.path.isfile(args.path):
             analyzer.analyze_file(args.path)
         else:
-            analyzer.analyze_directory(args.path)
+            analyzer.analyze_directory(args.path, args.no_test)
         
         # 속성과 메서드는 기본적으로 표시 (--no-attributes나 --no-methods 옵션이 없을 때)
         analyzer.generate_diagram(
             output_file=args.output,
             include_attributes=not args.no_attributes,
-            include_methods=not args.no_methods
+            include_methods=not args.no_methods,
         )
         
         if args.summary:

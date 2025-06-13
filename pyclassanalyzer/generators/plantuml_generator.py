@@ -10,7 +10,11 @@ class PlantUMLGenerator:
     def __init__(self, result: AnalysisResult):
         self.result = result
 
-    def generate_diagram(self, output_file: str = "class_diagram.puml", include_attributes: bool = True, include_methods: bool = True) -> None:
+    def generate_diagram(self, 
+                         output_file: str = "class_diagram.puml", 
+                         include_attributes: bool = True, 
+                         include_methods: bool = True
+                         ) -> None:
         """PlantUML 다이어그램 생성"""
         modules = defaultdict(list)
         for cls, mod in self.result.class_modules.items():
