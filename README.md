@@ -77,4 +77,4 @@ python3 -m pyclassanalyzer.cli ./pyclassanalyzer --no-test --summary
 
 ###### diagram
 
-![result](./imgs/result.png))
+![result](./imgs/result.png)
