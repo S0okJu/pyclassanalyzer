@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="pyclassanalyzer",
-    version="0.1.0",
-    author="Your Name",
+    version="1.0.1",
+    author="s0okju",
     author_email="your.email@example.com",
     description="A tool for analyzing Python class structure and generating PlantUML diagrams",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/pyclassanalyzer",
+    url="https://github.com/s0okju/pyclassanalyzer",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
