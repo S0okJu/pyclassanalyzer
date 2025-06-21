@@ -59,6 +59,7 @@ class PackageTree:
             parts_len = len(parts) -1 
             for i, part in enumerate(parts):
                 type_ = MODULE if i == parts_len and '.' in part else PACKAGE
+                
                 current = current.create_child(name=part, type_=type_)
     
     def traverse(self, base_path: str) -> Generator[Tuple[str, ast.AST], None, None]:
@@ -66,7 +67,11 @@ class PackageTree:
         def _dfs(node: PackageNode, path: List[str]):
             current_path = path + [node.value.name]
 
+            if node.value.type_ == PACKAGE and node.value.name == 'tests':
+                return
+            
             if node.value.type_ == MODULE:
+                                
                 full_path = os.path.join(base_path, *current_path[1:])
 
                 with open(full_path, 'r', encoding='utf-8') as f:

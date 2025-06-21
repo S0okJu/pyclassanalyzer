@@ -15,7 +15,11 @@ class ModuleType(Enum):
 
 class RelationType(Enum):
     INHERITANCE = "inheritance"
-    COMPOSITION = "composition"
+    COMPOSITION = "composition" 
+    AGGREGATION = "aggregation"
+    ASSOCIATION = "association"
+    DEPENDENCY = "dependency"
+    REALIZATION = "realization"
     USE = "use"
     
     def __str__(self):
