@@ -86,8 +86,8 @@ def main():
                 print("\nPlantUML 다이어그램:")
                 print("=" * 50)
             
-            content = scanner.get_plantuml_content(args.title)
-            print(content)
+            # content = scanner.get_plantuml_content(args.title)
+            # print(content)
             
         else:
             # 파일 저장 (및 선택적으로 콘솔 출력)

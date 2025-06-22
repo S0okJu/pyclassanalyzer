@@ -42,14 +42,14 @@ class ClassNode(BaseModel):
     annotations: Optional[List[str]] = []
 
     name: str
-    attributes: Optional[List[str]] = []
+    attributes: Optional[Set[str]] = set()
     functions: Optional[List[FunctionDef]] = []
  
     def add_function(self, func: FunctionDef):
         self.functions.append(func)
     
     def add_attribute(self, attr: str):
-        self.attributes.append(attr)   
+        self.attributes.add(attr)
     
  
     def __hash__(self) -> int:

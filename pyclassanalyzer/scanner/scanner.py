@@ -24,7 +24,10 @@ class GraphScanner:
         for _, tree in package_tree.traverse(base_path=self.path):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)
-    
+
+        for _, tree in package_tree.traverse(base_path=self.path):
+            for node in tree.body:  # 최상위 노드만 탐색
+                self.visitor.visit(node)
     
     def print_plantuml(self, output_path: Optional[str] = None, title: Optional[str] = None):
         """AST 분석 결과를 PlantUML 다이어그램으로 출력"""
