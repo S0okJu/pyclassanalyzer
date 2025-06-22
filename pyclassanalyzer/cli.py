@@ -1,6 +1,7 @@
 import argparse
 import sys
 import os
+import time 
 from pathlib import Path
 
 from pyclassanalyzer.scanner.scanner import GraphScanner
