@@ -128,7 +128,7 @@ class PlantUMLGenerator:
         """ClassGraph를 완전한 PlantUML 다이어그램으로 변환"""
         
         # 디버깅 정보 출력
-        self.debug_class_graph(class_graph)
+        # self.debug_class_graph(class_graph)
         
         lines = ["@startuml"]
         lines.append(f"title {title}")
