@@ -1,7 +1,7 @@
 import pytest
 from io import StringIO
 
-from pyclassanalyzer.generators.plantuml_generator import PlantUMLGenerator
+from pyclassanalyzer.plantuml_generator import PlantUMLGenerator
 
 class UnclosableStringIO(StringIO):
     def close(self):
