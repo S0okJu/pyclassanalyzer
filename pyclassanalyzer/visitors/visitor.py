@@ -82,10 +82,8 @@ class Visitor(ast.NodeVisitor):
                isinstance(target.value, ast.Name) and \
                target.value.id == 'self':
 
-                # 예: self.xxx
                 self.current_class.add_attribute(attr=target.attr)
 
-                # self.xxx = SomeClass() 패턴 체크
                 if isinstance(node.value, ast.Call):
                     func = node.value.func
                     class_name = None
@@ -147,10 +145,8 @@ class Visitor(ast.NodeVisitor):
                isinstance(target.value, ast.Name) and \
                target.value.id == 'self':
 
-                # self.xxx는 클래스 속성이므로 추가
                 self.current_class.add_attribute(attr=target.attr)
 
-                # self.xxx = SomeClass() 패턴 체크
                 if isinstance(node.value, ast.Call):
                     func = node.value.func
                     class_name = None
@@ -218,7 +214,6 @@ class Visitor(ast.NodeVisitor):
 
         self.current_class.add_attribute(attr=attr)
 
-        # Composition
         type_classes = extract_type_names(node.annotation)
         for class_ in type_classes: 
             if class_ in ('str','int','float', 'bool','Any'):
