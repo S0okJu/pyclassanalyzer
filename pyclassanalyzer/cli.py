@@ -15,7 +15,7 @@ def main():
     parser.add_argument('path', 
                        help='분석할 Python 파일 또는 디렉토리 경로')
     parser.add_argument('-o', '--output',  
-                       help='출력할 PlantUML 파일 경로 (기본값: [project_name]_class_diagram_[timestamp].puml")'
+                       help='출력할 PlantUML 파일 경로 (기본값: [project_name]_[timestamp].puml")'
                        )
     parser.add_argument('--summary', 
                        action='store_true', 
@@ -23,8 +23,8 @@ def main():
     parser.add_argument('-t', '--title',
                        help='다이어그램 제목 (기본값: 프로젝트 이름 기반 자동 생성)')
     parser.add_argument('--exclude',
-                        action='append',
-                        help= '제외시킬 폴더')
+                        help= '제외시킬 폴더(현재까지 폴더 하나만 지원됩니다.)')
+    
     args = parser.parse_args()
 
     try:
@@ -33,12 +33,12 @@ def main():
             print(f"Error: 지정된 경로를 찾을 수 없습니다: {args.path}", file=sys.stderr)
             return 1
         
-        scanner = GraphScanner(str(input_path))  
+        scanner = GraphScanner(path=str(input_path))  
         if input_path.is_file():
             print(f"Warning: 현재 파일은 지원되지 않습니다.")
             return 1
         elif input_path.is_dir():   
-            scanner.analyze()
+            scanner.analyze(exclude=args.exclude)
             
         if args.summary:
             scanner.print_analysis_summary()

@@ -16,12 +16,25 @@ class GraphScanner:
         self.visitor = Visitor(graph=self.graph)
         self.plantuml_generator = PlantUMLGenerator()
     
-    def analyze(self):
-        """패키지 분석 및 AST 순회"""
+    def analyze(self, exclude:str):
+        """
+        패키지 분석 및 AST 순회
+        정확성을 위해 2회 방문
+        """
         package_analyzer = PackageAnalyzer(path=self.path)
         package_tree = package_analyzer.analyze()
         
-        for _, tree in package_tree.traverse(base_path=self.path):
+        # try 1
+        for _, tree in package_tree.traverse(
+            base_path=self.path, exclude=exclude
+        ):
+            for node in tree.body:  # 최상위 노드만 탐색
+                self.visitor.visit(node)
+        
+        # try 2 
+        for _, tree in package_tree.traverse(
+            base_path=self.path, exclude=exclude
+        ):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)
     
@@ -98,8 +111,8 @@ class GraphScanner:
         
         print("-" * 40)
     
-    def generate_auto_filename(self, base_name: str = "class_diagram") -> str:
+    def generate_auto_filename(self) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         project_name = os.path.basename(os.path.abspath(self.path))
-        return f"{project_name}_{base_name}_{timestamp}.puml"
+        return f"{project_name}_{timestamp}.puml"
         
