@@ -1,7 +1,6 @@
 import argparse
 import sys
-import os
-import time 
+
 from pathlib import Path
 
 from pyclassanalyzer.scanner.scanner import GraphScanner
@@ -37,7 +36,7 @@ def main():
         if input_path.is_file():
             print(f"Warning: 현재 파일은 지원되지 않습니다.")
             return 1
-        elif input_path.is_dir():   
+        elif input_path.is_dir(): 
             scanner.analyze(exclude=args.exclude)
             
         if args.summary:
@@ -51,14 +50,14 @@ def main():
         output_dir = Path(output_path).parent
         if not output_dir.exists():
             output_dir.mkdir(parents=True, exist_ok=True)
-
+        
         is_success = scanner.save_plantuml(output_path, args.title)
         if is_success:
             scanner.print_graph_count()
         else:
             print(f"Error: 파일 저장 실패: {output_path}", file=sys.stderr)
             return 1
-    
+        
     except KeyboardInterrupt:
         print("\n사용자에 의해 중단되었습니다.", file=sys.stderr)
         return 1

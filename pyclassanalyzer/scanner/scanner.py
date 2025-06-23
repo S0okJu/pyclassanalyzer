@@ -1,4 +1,3 @@
-import ast
 import os
 from datetime import datetime
 from typing import Optional
@@ -21,9 +20,10 @@ class GraphScanner:
         패키지 분석 및 AST 순회
         정확성을 위해 2회 방문
         """
+        
         package_analyzer = PackageAnalyzer(path=self.path)
         package_tree = package_analyzer.analyze()
-        
+
         # try 1
         for _, tree in package_tree.traverse(
             base_path=self.path, exclude=exclude
@@ -37,6 +37,7 @@ class GraphScanner:
         ):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)
+
     
     def print_plantuml(self, output_path: Optional[str] = None, title: Optional[str] = None):
         """AST 분석 결과를 PlantUML 다이어그램으로 출력"""
