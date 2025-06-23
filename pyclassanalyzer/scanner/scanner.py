@@ -1,9 +1,9 @@
 import ast
 import os
-import datetime 
+from datetime import datetime
 from typing import Optional
 
-from pyclassanalyzer.analyzer.package import PackageAnalyzer
+from pyclassanalyzer.analyzer.package import PackageAnalyzer, analyze_module
 from pyclassanalyzer.visitors.visitor import Visitor
 from pyclassanalyzer.network.classgraph import ClassGraph
 from pyclassanalyzer.generators.plantuml import PlantUMLGenerator
@@ -24,7 +24,6 @@ class GraphScanner:
         for _, tree in package_tree.traverse(base_path=self.path):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)
-    
     
     def print_plantuml(self, output_path: Optional[str] = None, title: Optional[str] = None):
         """AST 분석 결과를 PlantUML 다이어그램으로 출력"""
@@ -53,7 +52,6 @@ class GraphScanner:
         return plantuml_content
     
     def save_plantuml(self, output_path: str, title: Optional[str] = None) -> bool:
-        """PlantUML 다이어그램을 파일로만 저장 (콘솔 출력 없음)"""
         
         if title is None:
             project_name = os.path.basename(os.path.abspath(self.path))
@@ -62,7 +60,6 @@ class GraphScanner:
         return self.plantuml_generator.save_to_file(self.graph, output_path, title)
     
     def get_plantuml_content(self, title: Optional[str] = None) -> str:
-        """PlantUML 내용을 문자열로만 반환 (출력이나 저장 없음)"""
         
         if title is None:
             project_name = os.path.basename(os.path.abspath(self.path))
@@ -70,22 +67,16 @@ class GraphScanner:
         
         return self.plantuml_generator.generate_plantuml(self.graph, title)
     
-    def analyze_and_output(self, output_path: Optional[str] = None, title: Optional[str] = None):
-        """분석과 출력을 한 번에 수행"""
-        print(f"프로젝트 분석 시작: {self.path}")
-        print("-" * 40)
+    def print_graph_count(self):
+        node_cnt = len(self.graph.nodes)
+        relation_cnt = len(self.graph.relations)
         
-        # AST 분석 수행
-        self.analyze()
-        
-        # 분석 결과 요약 출력
-        self.print_analysis_summary()
-        
-        # PlantUML 다이어그램 출력
-        self.print_plantuml(output_path, title)
+        if node_cnt == 0:
+            print("Warning: 분석된 클래스가 없습니다. 경로를 확인해주세요.")
+        else:
+            print(f"총 {node_cnt}개의 클래스와 {relation_cnt}개의 관계를 발견했습니다.")
     
     def print_analysis_summary(self):
-        """분석 결과 요약 정보 출력"""
         print(f"분석 완료!")
         print(f"- 발견된 클래스: {len(self.graph.nodes)}개")
         print(f"- 발견된 관계: {len(self.graph.relations)}개")
@@ -108,7 +99,6 @@ class GraphScanner:
         print("-" * 40)
     
     def generate_auto_filename(self, base_name: str = "class_diagram") -> str:
-        """자동으로 파일명 생성"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         project_name = os.path.basename(os.path.abspath(self.path))
         return f"{project_name}_{base_name}_{timestamp}.puml"
