@@ -34,9 +34,17 @@ class FunctionDef(BaseModel):
     name: str 
     fields: Optional[List[str]] = []
     
-        
+class ClassType(Enum):
+    CLASS = "class" # default 
+    ENUM = "enum"
+    ABSTRACT = "abstract"
+    
+    def __str__(self):
+        return self.value
+
 class ClassNode(BaseModel):
     module: Optional[ModuleDef] = None
+    type_: ClassType = ClassType.CLASS
     external_module: List[ModuleDef] = []
 
     annotations: Optional[List[str]] = []
@@ -51,7 +59,12 @@ class ClassNode(BaseModel):
     def add_attribute(self, attr: str):
         self.attributes.add(attr)
     
- 
+    def set_enum(self):
+        self.type_ = ClassType.ENUM
+    
+    def set_abstract(self):
+        self.type_ = ClassType.ABSTRACT
+    
     def __hash__(self) -> int:
         return hash(self.name)
     
