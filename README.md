@@ -3,7 +3,8 @@
 **pyclassanalyzer** automatically analyzes the class structure of a Python project and exports the results as a diagram.
 
 > [!IMPORTANT]  
-> Using the dataclass(@dataclass) may cause errors when working with older versions(< [v1.2025.4](https://github.com/plantuml/plantuml/releases/tag/v1.2025.4)) of the PlantUML engine.
+> We did not using the `dataclass` element supported by PlantUML.
+> Using the dataclass(@dataclass) may cause errors when working with older versions(prior to [v1.2025.4](https://github.com/plantuml/plantuml/releases/tag/v1.2025.4)) of the PlantUML. Therefore, we will create our own custom elements until the updated version of PlnatUML is widely adopted.
 
 ## Features
 
