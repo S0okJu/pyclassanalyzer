@@ -63,6 +63,8 @@ class PlantUMLGenerator:
         
         if hasattr(node, 'functions') and node.functions:
             for func in node.functions:
+                if is_magic(func.name):
+                    continue
                 params = streamline_fields(getattr(func, 'fields', []))
                 line.append(f"  {get_symbol(func.name)}({params})")
         
