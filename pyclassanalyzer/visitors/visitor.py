@@ -2,7 +2,7 @@ import ast
 from typing import Optional
 
 from pyclassanalyzer.network.classgraph import (
-    ClassGraph, ClassNode, Relation, RelationType, FunctionDef
+    ClassGraph, ClassNode, Relation, RelationType, FunctionDef, ClassType
 )
 
 class Visitor(ast.NodeVisitor):
@@ -24,6 +24,9 @@ class Visitor(ast.NodeVisitor):
         
         self.graph.add_node(class_)
         self.current_class = class_
+        
+        if 'dataclass' in class_.annotations:
+            class_.type_ = ClassType.DATACLASS
         
         # 상속 관계
         for base in node.bases:

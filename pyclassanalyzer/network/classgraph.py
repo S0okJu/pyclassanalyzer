@@ -38,6 +38,7 @@ class ClassType(Enum):
     CLASS = "class" # default 
     ENUM = "enum"
     ABSTRACT = "abstract"
+    DATACLASS = "dataclass"
     
     def __str__(self):
         return self.value

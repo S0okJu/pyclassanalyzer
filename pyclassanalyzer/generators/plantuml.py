@@ -53,6 +53,10 @@ class PlantUMLGenerator:
             line.append(f"enum {node.name} {{")
         elif node.type_ == ClassType.ABSTRACT:
             line.append(f"abstract class {node.name} {{")
+        elif node.type_ == ClassType.DATACLASS:
+            line.append(f"class {node.name} << (D,#FFDD55) >> {{")
+            # >=2025.4 support
+            # line.append(f"dataclass {node.name} {{")
         else:
             line.append(f"class {node.name} {{")
         
