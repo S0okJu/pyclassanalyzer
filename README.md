@@ -2,6 +2,10 @@
 
 **pyclassanalyzer** automatically analyzes the class structure of a Python project and exports the results as a diagram.
 
+> [!IMPORTANT]  
+> We did not using the `dataclass` element supported by PlantUML.
+> Using the dataclass(@dataclass) may cause errors when working with older versions(prior to [v1.2025.4](https://github.com/plantuml/plantuml/releases/tag/v1.2025.4)) of the PlantUML. Therefore, we will create our own custom elements until the updated version of PlnatUML is widely adopted.
+
 ## Features
 
 - **Automatic Analysis:** Parses your Python codebase to extract class information (attributes, methods) and relationships (inheritance, composition, usage).
@@ -29,4 +33,4 @@ python3 -m pyclassanalyzer.cli [path] [options]
 
 ##### Example
 
-![result](./imgs/v1.0.2.png)
+![result](./imgs/v1.0.3.png)

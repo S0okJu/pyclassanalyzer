@@ -1,9 +1,8 @@
 import re
 import os
 from typing import List, Dict, Optional
-from enum import Enum
 
-from pyclassanalyzer.network.classgraph import RelationType, ClassNode
+from pyclassanalyzer.network.classgraph import RelationType, ClassNode, ClassType
 
 INDENT = "  "
 
@@ -50,9 +49,17 @@ class PlantUMLGenerator:
     def _generate_class(self, node:ClassNode) -> str:
         line = []
         
-        line.append(f"class {node.name} {{")
+        if node.type_ == ClassType.ENUM:
+            line.append(f"enum {node.name} {{")
+        elif node.type_ == ClassType.ABSTRACT:
+            line.append(f"abstract class {node.name} {{")
+        elif node.type_ == ClassType.DATACLASS:
+            line.append(f"class {node.name} << (D,#FFDD55) >> {{")
+            # >=2025.4 support
+            # line.append(f"dataclass {node.name} {{")
+        else:
+            line.append(f"class {node.name} {{")
         
-        # add attribute
         if hasattr(node, 'attributes') and node.attributes:
             for attr in node.attributes:
                 line.append(f"  {get_symbol(attr)}")

@@ -2,7 +2,7 @@ import ast
 from typing import Optional
 
 from pyclassanalyzer.network.classgraph import (
-    ClassGraph, ClassNode, Relation, RelationType, FunctionDef
+    ClassGraph, ClassNode, Relation, RelationType, FunctionDef, ClassType
 )
 
 class Visitor(ast.NodeVisitor):
@@ -25,15 +25,24 @@ class Visitor(ast.NodeVisitor):
         self.graph.add_node(class_)
         self.current_class = class_
         
+        if 'dataclass' in class_.annotations:
+            class_.type_ = ClassType.DATACLASS
+        
         # 상속 관계
         for base in node.bases:
             if isinstance(base, ast.Name):
-                relation = Relation(
-                    source= node.name,
-                    target= base.id,
-                    type_ = RelationType.INHERITANCE
-                )
-                self.graph.add_relation(relation)
+                # Enum, ABC 타입 처리
+                if base.id == 'Enum':
+                    class_.set_enum()
+                elif base.id == 'ABC':
+                    class_.set_abstract()
+                else:
+                    relation = Relation(
+                        source= node.name,
+                        target= base.id,
+                        type_ = RelationType.INHERITANCE
+                    )
+                    self.graph.add_relation(relation)
         
         self.generic_visit(node)
         self.current_class = None
