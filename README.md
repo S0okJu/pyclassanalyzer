@@ -33,4 +33,4 @@ python3 -m pyclassanalyzer.cli [path] [options]
 
 ##### Example
 
-![result](./imgs/v1.0.2.png)
+![result](./imgs/v1.0.3.png)

@@ -60,7 +60,6 @@ class PlantUMLGenerator:
         else:
             line.append(f"class {node.name} {{")
         
-        # add attribute
         if hasattr(node, 'attributes') and node.attributes:
             for attr in node.attributes:
                 line.append(f"  {get_symbol(attr)}")
