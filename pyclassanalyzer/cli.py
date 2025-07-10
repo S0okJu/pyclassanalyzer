@@ -43,10 +43,11 @@ def main():
         if args.summary:
             scanner.print_analysis_summary()
         
+        outputs = 'outputs'
         output_path = args.output
         if not output_path:
             output_filename = scanner.generate_auto_filename()
-            output_path = str(Path.cwd() / output_filename)
+            output_path = str(Path.cwd()/ outputs / output_filename)
         
         output_dir = Path(output_path).parent
         if not output_dir.exists():
