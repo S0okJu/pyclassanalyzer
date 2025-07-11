@@ -1,39 +1,43 @@
 import ast
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pyclassanalyzer.analyzer.package import PackageAnalyzer, analyze_module
 from pyclassanalyzer.visitors.visitor import Visitor
 from pyclassanalyzer.network.classgraph import ClassGraph
 from pyclassanalyzer.generators.plantuml import PlantUMLGenerator
+from pyclassanalyzer.config import TomlConfig
 
 
 class GraphScanner:
-    def __init__(self, path: str):
+    def __init__(self, path: str, config: TomlConfig):
         self.path = path
+        self.config = config
         self.graph = ClassGraph()
-        self.visitor = Visitor(graph=self.graph)
-        self.plantuml_generator = PlantUMLGenerator()
+        self.visitor = Visitor(graph=self.graph, config=config)
+        self.plantuml_generator = PlantUMLGenerator(config=config)
     
-    def analyze(self, exclude:str):
+    def analyze(self):
         """
         패키지 분석 및 AST 순회
         정확성을 위해 2회 방문
         """
+        excludes = self.config.get('exclude')['directories']
+        
         package_analyzer = PackageAnalyzer(path=self.path)
         package_tree = package_analyzer.analyze()
         
         # try 1
         for _, tree in package_tree.traverse(
-            base_path=self.path, exclude=exclude
+            base_path=self.path, excludes=excludes
         ):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)
         
         # try 2 
         for _, tree in package_tree.traverse(
-            base_path=self.path, exclude=exclude
+            base_path=self.path, excludes=excludes
         ):
             for node in tree.body:  # 최상위 노드만 탐색
                 self.visitor.visit(node)

@@ -1,10 +1,11 @@
+import toml 
 import argparse
 import sys
-import os
-import time 
 from pathlib import Path
 
 from pyclassanalyzer.scanner.scanner import GraphScanner
+from pyclassanalyzer.config import TomlConfig
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -22,23 +23,24 @@ def main():
                        help='분석 결과 요약 출력')
     parser.add_argument('-t', '--title',
                        help='다이어그램 제목 (기본값: 프로젝트 이름 기반 자동 생성)')
-    parser.add_argument('--exclude',
-                        help= '제외시킬 폴더(현재까지 폴더 하나만 지원됩니다.)')
     
     args = parser.parse_args()
 
     try:
+        # Config 
+        config = TomlConfig()
+        # Target
         input_path = Path(args.path)
         if not input_path.exists():
             print(f"Error: 지정된 경로를 찾을 수 없습니다: {args.path}", file=sys.stderr)
             return 1
         
-        scanner = GraphScanner(path=str(input_path))  
+        scanner = GraphScanner(path=str(input_path), config=config)  
         if input_path.is_file():
             print(f"Warning: 현재 파일은 지원되지 않습니다.")
             return 1
         elif input_path.is_dir():   
-            scanner.analyze(exclude=args.exclude)
+            scanner.analyze()
             
         if args.summary:
             scanner.print_analysis_summary()
@@ -62,6 +64,15 @@ def main():
     
     except KeyboardInterrupt:
         print("\n사용자에 의해 중단되었습니다.", file=sys.stderr)
+        return 1
+    except FileNotFoundError:
+        print(f"Error: 지정된 경로를 찾을 수 없습니다. toml", file=sys.stderr)
+        return 1
+    except PermissionError:
+        print(f"Error: 파일 접근 권한이 없습니다: {args.path}", file=sys.stderr)
+        return 1
+    except toml.TomlDecodeError as e:
+        print(f"Error: TOML 파일 파싱 오류: {e}", file=sys.stderr)
         return 1
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

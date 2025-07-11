@@ -62,12 +62,12 @@ class PackageTree:
                 
                 current = current.create_child(name=part, type_=type_)
     
-    def traverse(self, base_path: str, exclude:str) -> Generator[Tuple[str, ast.AST], None, None]:
+    def traverse(self, base_path: str, excludes:List[str]) -> Generator[Tuple[str, ast.AST], None, None]:
 
         def _dfs(node: PackageNode, path: List[str]):
             current_path = path + [node.value.name]
 
-            if node.value.type_ == PACKAGE and node.value.name == exclude:
+            if node.value.type_ == PACKAGE and node.value.name in excludes:
                 return
             
             if node.value.type_ == MODULE:
