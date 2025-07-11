@@ -65,13 +65,46 @@ class Visitor(ast.NodeVisitor):
         
         self.generic_visit(node)
         self.current_class = None
-                
+    
+    # TODO: Track the object types of `self.xxx` attributes from method parameters.
+    # For example, if `__init__(self, a:A): self.a = a`,
+    # trach the object type by mapping the parameter type `a:A` to the assignment `self.a = a` 
+    def _parse_function_attrs(self, node: ast.FunctionDef) -> None:
+        """Parse the method to identify dependency relationships 
+        by analyzing the type hints of its attributes.
+        
+        Example:
+            class Test:
+                def __init__(self, a:A):
+                    self.a = a
+        
+        It parses the type(A) from "__init__(self, a:A)" method. 
+        
+        Args:
+            node (ast.FunctionDef): the node to parse
+        """
+        for arg in node.args.args:
+            if arg.annotation and isinstance(arg.annotation, ast.Name):
+                rel = Relation(
+                    source=self.current_class.name,
+                    target=arg.annotation.id,
+                    type_=RelationType.DEPENDENCY
+                )
+                self.graph.add_relation(rel)
+            
+       
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if not self.current_class:
-            return 
+            return
+        
         func = FunctionDef(name=node.name)
         self.current_class.add_function(func=func)
 
+        # NOTE: Focus only on dependency relationships defined in the '__init__()' method.
+        # Marking all objects in method parameters can make the diagram complex.
+        if func.name == '__init__':
+            self._parse_function_attrs(node)
+        
         # 함수 내부의 모든 노드를 순회
         for child in ast.walk(node):
             # USE 관계 처리

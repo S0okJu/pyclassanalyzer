@@ -13,19 +13,17 @@ from pyclassanalyzer.config import TomlConfig
 class GraphScanner:
     def __init__(self, path: str, config: TomlConfig):
         self.path = path
-        self._config = config
+        self.config = config
         self.graph = ClassGraph()
         self.visitor = Visitor(graph=self.graph, config=config)
         self.plantuml_generator = PlantUMLGenerator(config=config)
-        
-        
-        
+    
     def analyze(self):
         """
         패키지 분석 및 AST 순회
         정확성을 위해 2회 방문
         """
-        excludes = self._config.get('exclude')['directories']
+        excludes = self.config.get('exclude')['directories']
         
         package_analyzer = PackageAnalyzer(path=self.path)
         package_tree = package_analyzer.analyze()
