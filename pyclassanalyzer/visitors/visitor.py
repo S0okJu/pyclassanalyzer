@@ -6,6 +6,8 @@ from pyclassanalyzer.network.classgraph import (
     ClassGraph, ClassNode, Relation, RelationType, FunctionDef, ClassType
 )
 from pyclassanalyzer.config import TomlConfig
+from pyclassanalyzer.utils.class_type import is_magic
+
 
 def check_exception_name(format:str, name:str) -> bool:
     return bool(fnmatch.fnmatch(name, format))
@@ -67,7 +69,6 @@ class Visitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if not self.current_class:
             return 
-
         func = FunctionDef(name=node.name)
         self.current_class.add_function(func=func)
 

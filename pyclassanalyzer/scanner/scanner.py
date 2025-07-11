@@ -16,7 +16,7 @@ class GraphScanner:
         self._config = config
         self.graph = ClassGraph()
         self.visitor = Visitor(graph=self.graph, config=config)
-        self.plantuml_generator = PlantUMLGenerator()
+        self.plantuml_generator = PlantUMLGenerator(config=config)
         
         
         
