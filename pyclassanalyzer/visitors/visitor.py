@@ -1,19 +1,36 @@
+import fnmatch
 import ast
 from typing import Optional
 
 from pyclassanalyzer.network.classgraph import (
     ClassGraph, ClassNode, Relation, RelationType, FunctionDef, ClassType
 )
+from pyclassanalyzer.config import TomlConfig
+
+def check_exception_name(format:str, name:str) -> bool:
+    return bool(fnmatch.fnmatch(name, format))
 
 class Visitor(ast.NodeVisitor):
-    def __init__(self, graph:ClassGraph) -> None:
+    def __init__(self, graph:ClassGraph, config: TomlConfig) -> None:
         self.graph = graph
         self.current_class: Optional[ClassNode] = None
         
         # 중복 방지용 
         self._composition_calls: set[int] = set()
+        self._config = config
+ 
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        
+        # If "exception" is included in the [exclude] types in the TOML config,
+        # and the name matches the required format,
+        # skip processing the Visit class. 
+        exception_format = self._config.get('exception')['name']
+        exclude_exception = True if 'exception' in self._config.get('exclude')['types'] else False
+        if exclude_exception and \
+            check_exception_name(format=exception_format, name=node.name):
+            return 
+
         class_ = ClassNode(name=node.name)
         
         # Decorator

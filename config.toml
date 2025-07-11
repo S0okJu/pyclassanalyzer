@@ -1,0 +1,7 @@
+[exclude]
+directories = ["tests"]
+types = ["exception"]
+methods = ["magic"]
+
+[exception]
+name = "*Exception"
