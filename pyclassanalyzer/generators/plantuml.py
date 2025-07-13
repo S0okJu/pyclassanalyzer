@@ -34,7 +34,7 @@ class PlantUMLGenerator:
         self.relation_symbols = {
             RelationType.INHERITANCE: "--|>",
             RelationType.COMPOSITION: "*--",
-            RelationType.USE: "..>",
+            RelationType.DEPENDENCY: "..>",
         }
         self._config = config
     

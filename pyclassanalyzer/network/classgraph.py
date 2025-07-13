@@ -20,7 +20,6 @@ class RelationType(Enum):
     ASSOCIATION = "association"
     DEPENDENCY = "dependency"
     REALIZATION = "realization"
-    USE = "use"
     
     def __str__(self):
         return self.value
