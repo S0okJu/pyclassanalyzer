@@ -49,6 +49,8 @@ class PlantUMLGenerator:
             line.append(f"class {node.name} << (D,#FFDD55) >> {{")
             # >=2025.4 support
             # line.append(f"dataclass {node.name} {{")
+        elif node.type_ == ClassType.EXCEPTION:
+            line.append(f"exception {node.name} {{")
         else:
             line.append(f"class {node.name} {{")
         

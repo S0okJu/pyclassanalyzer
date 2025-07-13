@@ -33,6 +33,7 @@ class Visitor(ast.NodeVisitor):
             check_exception_name(format=exception_format, name=node.name):
             return 
 
+        # make class 
         class_ = ClassNode(name=node.name)
         
         # Decorator
@@ -41,20 +42,20 @@ class Visitor(ast.NodeVisitor):
             for dec in node.decorator_list
         ]
         
-        self.graph.add_node(class_)
-        self.current_class = class_
-        
         if 'dataclass' in class_.annotations:
             class_.type_ = ClassType.DATACLASS
+        
+        if check_exception_name(format=exception_format, name=node.name):
+            class_.type_ = ClassType.EXCEPTION
         
         # 상속 관계
         for base in node.bases:
             if isinstance(base, ast.Name):
                 # Enum, ABC 타입 처리
                 if base.id == 'Enum':
-                    class_.set_enum()
+                    class_.type_ = ClassType.ENUM
                 elif base.id == 'ABC':
-                    class_.set_abstract()
+                    class_.type_ = ClassType.ABSTRACT
                 else:
                     relation = Relation(
                         source= node.name,
@@ -62,6 +63,9 @@ class Visitor(ast.NodeVisitor):
                         type_ = RelationType.INHERITANCE
                     )
                     self.graph.add_relation(relation)
+        
+        self.graph.add_node(class_)
+        self.current_class = class_
         
         self.generic_visit(node)
         self.current_class = None

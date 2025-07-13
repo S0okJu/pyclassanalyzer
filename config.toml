@@ -1,6 +1,6 @@
 [exclude]
 directories = ["tests"]
-types = ["exception"]
+types = []
 methods = ["magic"]
 
 [exception]
