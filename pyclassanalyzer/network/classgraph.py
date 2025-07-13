@@ -20,7 +20,6 @@ class RelationType(Enum):
     ASSOCIATION = "association"
     DEPENDENCY = "dependency"
     REALIZATION = "realization"
-    USE = "use"
     
     def __str__(self):
         return self.value
@@ -35,10 +34,12 @@ class FunctionDef(BaseModel):
     fields: Optional[List[str]] = []
     
 class ClassType(Enum):
+    """Types of classes for display perpose"""
     CLASS = "class" # default 
     ENUM = "enum"
     ABSTRACT = "abstract"
     DATACLASS = "dataclass"
+    EXCEPTION = "exception"
     
     def __str__(self):
         return self.value

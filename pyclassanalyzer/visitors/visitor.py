@@ -1,19 +1,39 @@
+import fnmatch
 import ast
 from typing import Optional
 
 from pyclassanalyzer.network.classgraph import (
     ClassGraph, ClassNode, Relation, RelationType, FunctionDef, ClassType
 )
+from pyclassanalyzer.config import TomlConfig
+from pyclassanalyzer.utils.class_type import is_magic
+
+
+def check_exception_name(format:str, name:str) -> bool:
+    return bool(fnmatch.fnmatch(name, format))
 
 class Visitor(ast.NodeVisitor):
-    def __init__(self, graph:ClassGraph) -> None:
+    def __init__(self, graph:ClassGraph, config: TomlConfig) -> None:
         self.graph = graph
         self.current_class: Optional[ClassNode] = None
         
         # 중복 방지용 
         self._composition_calls: set[int] = set()
+        self._config = config
+ 
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        
+        # If "exception" is included in the [exclude] types in the TOML config,
+        # and the name matches the required format,
+        # skip processing the Visit class. 
+        exception_format = self._config.get('exception')['name']
+        exclude_exception = True if 'exception' in self._config.get('exclude')['types'] else False
+        if exclude_exception and \
+            check_exception_name(format=exception_format, name=node.name):
+            return 
+
+        # make class 
         class_ = ClassNode(name=node.name)
         
         # Decorator
@@ -22,20 +42,20 @@ class Visitor(ast.NodeVisitor):
             for dec in node.decorator_list
         ]
         
-        self.graph.add_node(class_)
-        self.current_class = class_
-        
         if 'dataclass' in class_.annotations:
             class_.type_ = ClassType.DATACLASS
+        
+        if check_exception_name(format=exception_format, name=node.name):
+            class_.type_ = ClassType.EXCEPTION
         
         # 상속 관계
         for base in node.bases:
             if isinstance(base, ast.Name):
                 # Enum, ABC 타입 처리
                 if base.id == 'Enum':
-                    class_.set_enum()
+                    class_.type_ = ClassType.ENUM
                 elif base.id == 'ABC':
-                    class_.set_abstract()
+                    class_.type_ = ClassType.ABSTRACT
                 else:
                     relation = Relation(
                         source= node.name,
@@ -44,16 +64,51 @@ class Visitor(ast.NodeVisitor):
                     )
                     self.graph.add_relation(relation)
         
+        self.graph.add_node(class_)
+        self.current_class = class_
+        
         self.generic_visit(node)
         self.current_class = None
-                
+    
+    # TODO: Track the object types of `self.xxx` attributes from method parameters.
+    # For example, if `__init__(self, a:A): self.a = a`,
+    # trach the object type by mapping the parameter type `a:A` to the assignment `self.a = a` 
+    def _parse_function_attrs(self, node: ast.FunctionDef) -> None:
+        """Parse the method to identify dependency relationships 
+        by analyzing the type hints of its attributes.
+        
+        Example:
+            class Test:
+                def __init__(self, a:A):
+                    self.a = a
+        
+        It parses the type(A) from "__init__(self, a:A)" method. 
+        
+        Args:
+            node (ast.FunctionDef): the node to parse
+        """
+        for arg in node.args.args:
+            if arg.annotation and isinstance(arg.annotation, ast.Name):
+                rel = Relation(
+                    source=self.current_class.name,
+                    target=arg.annotation.id,
+                    type_=RelationType.DEPENDENCY
+                )
+                self.graph.add_relation(rel)
+            
+       
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if not self.current_class:
-            return 
-
+            return
+        
         func = FunctionDef(name=node.name)
         self.current_class.add_function(func=func)
 
+        # NOTE: Focus only on dependency relationships defined in the '__init__()' method.
+        # Marking all objects in method parameters can make the diagram complex.
+        if func.name == '__init__':
+            self._parse_function_attrs(node)
+        
         # 함수 내부의 모든 노드를 순회
         for child in ast.walk(node):
             # USE 관계 처리
@@ -64,7 +119,7 @@ class Visitor(ast.NodeVisitor):
                 relation = Relation(
                     source=self.current_class.name,
                     target=child.func.id,
-                    type_=RelationType.USE
+                    type_=RelationType.DEPENDENCY
                 )
                 self.graph.add_relation(relation)
 

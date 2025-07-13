@@ -1,19 +1,10 @@
-import re
 import os
-from typing import List, Dict, Optional
+from typing import List
 
 from pyclassanalyzer.network.classgraph import RelationType, ClassNode, ClassType
+from pyclassanalyzer.utils.class_type import is_private, is_protected, is_magic
 
 INDENT = "  "
-
-def is_protected(name: str) -> bool:
-    return re.fullmatch(r"_([^_]\w*)", name) is not None
-
-def is_private(name: str) -> bool:
-    return re.fullmatch(r"__([^_]\w*)", name) is not None and not name.endswith("__")
-
-def is_magic(name: str) -> bool:
-    return re.fullmatch(r"__\w+__", name) is not None
 
 def get_symbol(name:str) -> str:
     symbol = '+'
@@ -35,7 +26,7 @@ def streamline_fields(fields) -> str :
         return f"{fields[0]}, ..."
 
 class PlantUMLGenerator:    
-    def __init__(self):
+    def __init__(self, config):
         """
         COMPOSITION = self.xxx
         USE = 함수 내에서 사용하는 경우 
@@ -43,8 +34,9 @@ class PlantUMLGenerator:
         self.relation_symbols = {
             RelationType.INHERITANCE: "--|>",
             RelationType.COMPOSITION: "*--",
-            RelationType.USE: "..>",
+            RelationType.DEPENDENCY: "..>",
         }
+        self._config = config
     
     def _generate_class(self, node:ClassNode) -> str:
         line = []
@@ -57,6 +49,8 @@ class PlantUMLGenerator:
             line.append(f"class {node.name} << (D,#FFDD55) >> {{")
             # >=2025.4 support
             # line.append(f"dataclass {node.name} {{")
+        elif node.type_ == ClassType.EXCEPTION:
+            line.append(f"exception {node.name} {{")
         else:
             line.append(f"class {node.name} {{")
         
@@ -66,6 +60,15 @@ class PlantUMLGenerator:
         
         if hasattr(node, 'functions') and node.functions:
             for func in node.functions:
+                # If "magic" is included in the [exclude] methods in the TOML config,
+                # skip processing the Visit function 
+                       
+                # NOTE: The `__init__()` method is key to analyzing the relationship types between classes.
+                # We filter out magic methods after gathering all function lists.
+                exclude_magic = True if 'magic' in self._config.get('exclude')['methods'] else False
+                if exclude_magic and is_magic(func.name):
+                    continue
+                  
                 params = streamline_fields(getattr(func, 'fields', []))
                 line.append(f"  {get_symbol(func.name)}({params})")
         
