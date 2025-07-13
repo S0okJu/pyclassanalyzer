@@ -10,12 +10,30 @@
 
 - **Automatic Analysis:** Parses your Python codebase to extract class information (attributes, methods) and relationships (inheritance, composition, usage).
 - **PlantUML Output:** Generates class diagrams compatible with PlantUML.
+- **Customization:** An configuration file is available that allow you to generate the graph you want.
 
 ## Prerequisites
 
 To use PlantUML output, you need to have **Java** and **Graphviz** installed.
 
 ## How to Use
+
+#### 1. Set up a configuration file(`config.toml`)
+
+> [!NOTE]  
+> For more information, please read [configuration file guide](./docs/config.md)
+
+```toml
+[exclude]
+directories = ["tests"]
+types = ["exception"]
+methods = ["magic"]
+
+[exception]
+name = "*Exception"
+```
+
+#### 2. Execute pyclassanalyzer
 
 ```bash
 python3 -m pyclassanalyzer.cli [path] [options]
@@ -29,8 +47,7 @@ python3 -m pyclassanalyzer.cli [path] [options]
 | `--output`, `-o` NAME | Specify the output PlantUML file name                                       | `{project_name}_{timestamp}.puml` |
 | `--summary`           | Print a summary of the analysis results                                     |                                   |
 | `--title`, `-t` TITLE | Set the diagram title (auto-generated based on the project name by default) |                                   |
-| `--exclude` FOLDER    | Exclude a folder from analysis (currently, only one folder is supported)    |                                   |
 
 ##### Example
 
-![result](./imgs/v1.0.3.png)
+![result](./imgs/v1.0.4.png)
