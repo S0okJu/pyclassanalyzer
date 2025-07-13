@@ -119,7 +119,7 @@ class Visitor(ast.NodeVisitor):
                 relation = Relation(
                     source=self.current_class.name,
                     target=child.func.id,
-                    type_=RelationType.USE
+                    type_=RelationType.DEPENDENCY
                 )
                 self.graph.add_relation(relation)
 
