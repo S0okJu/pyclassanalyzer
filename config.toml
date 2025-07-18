@@ -1,7 +1,8 @@
 [exclude]
 directories = ["tests"]
-types = []
+types = ["exception"]
 methods = ["magic"]
+relationships = []
 
 [exception]
 name = "*Exception"
