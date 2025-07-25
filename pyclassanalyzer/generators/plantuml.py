@@ -159,9 +159,16 @@ class PlantUMLGenerator:
             ""
         ])
         
+        class_exclusion_list = self._config.get('exclude')['classes']
+        
         # 모든 클래스 정의 생성
         if hasattr(class_graph, 'nodes') and class_graph.nodes:
             for node_name, node in class_graph.nodes.items():
+                
+                if class_exclusion_list and \
+                    node.type_.__str__() in class_exclusion_list:
+                        continue
+                    
                 class_def = self._generate_class(node)
                 lines.append(class_def)
                 lines.append("")
@@ -174,6 +181,11 @@ class PlantUMLGenerator:
             lines.append("' Relationships")
             for relation in class_graph.relations:
                 try:
+                    
+                    if class_exclusion_list:
+                        if class_graph.get_node_type(relation.source) in class_exclusion_list or \
+                            class_graph.get_node_type(relation.target) in class_exclusion_list:
+                            continue
                     
                     # Do not generate a relationship in the configuration.
                     if self._config.get('exclude')['relationships'] and \

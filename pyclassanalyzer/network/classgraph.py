@@ -134,6 +134,10 @@ class ClassGraph(BaseModel):
     
     def get_node(self, name:str) -> Optional[ClassNode]:
         return self.nodes.get(name)
+    
+    def get_node_type(self, name:str) -> str:
+        
+        return self.nodes[name].type_.__str__()
 
     def get_outgoing_rels(self, name:str) -> List[Relation]:
         return [rel for rel in self.relations 
