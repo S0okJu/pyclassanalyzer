@@ -3,6 +3,7 @@ directories = ["tests"]
 types = ["exception"]
 methods = ["magic"]
 relationships = []
+classes = []
 
 [exception]
 name = "*Exception"
