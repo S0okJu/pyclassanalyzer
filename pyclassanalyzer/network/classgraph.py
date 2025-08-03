@@ -96,7 +96,10 @@ class Relation(BaseModel):
 
 class ClassGraph(BaseModel):
     nodes: Dict[str, ClassNode] = {}
-    relations: List[Relation] = []
+    
+    # After v1.0.5,
+    # use Set[Relation] instead of List[Relation] for faster lookup
+    relations: Set[Relation] = set()
 
     def add_node(self, node: ClassNode):
         self.nodes[node.name] = node
@@ -106,8 +109,9 @@ class ClassGraph(BaseModel):
             return False
         
         # Delete related relations
-        self.relations =[rel for rel in self.relations 
-                         if rel.source != name and rel.target != name]
+        relations_to_remove = {rel for rel in self.relations 
+                              if rel.source == name or rel.target == name}
+        self.relations -= relations_to_remove
         del self.nodes[name]
         return True 
 
@@ -116,9 +120,9 @@ class ClassGraph(BaseModel):
         if relation.source not in self.nodes or relation.target not in self.nodes:
             return False
         
-        # Check duplication
+        # Check duplication - return True only if relation was added (not already present)
         if relation not in self.relations:
-            self.relations.append(relation)
+            self.relations.add(relation)
             return True
         return False
     
@@ -127,7 +131,7 @@ class ClassGraph(BaseModel):
             self.relations.remove(relation)
             return True
         return False
-
+    
     def get_relations_by_type(self, relation_type: RelationType) -> List[Relation]:
         """특정 타입의 관계들을 반환합니다."""
         return [rel for rel in self.relations if rel.type_ == relation_type]
