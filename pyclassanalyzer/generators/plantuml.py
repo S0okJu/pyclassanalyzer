@@ -27,10 +27,8 @@ def streamline_fields(fields) -> str :
 
 class PlantUMLGenerator:    
     def __init__(self, config):
-        """
-        COMPOSITION = self.xxx
-        USE = 함수 내에서 사용하는 경우 
-        """
+        
+        # TODO: Refactor this into a function 
         self.relation_symbols = {
             RelationType.INHERITANCE: "--|>",
             RelationType.COMPOSITION: "*--",
@@ -39,6 +37,29 @@ class PlantUMLGenerator:
         self._config = config
     
     def _generate_class(self, node:ClassNode) -> str:
+        """Generates a PlantUML class definition for the provided class node.
+        This function prints class attributes and methods by default.
+        Magic methods are filtered according to the `exclude.methods` configuration.
+        
+        Supported types include:
+            - class (default)
+            - enum
+            - abstract
+            - dataclass
+            - exception
+
+        !NOTICE:
+            We did not using the dataclass element supported by PlantUML.
+            Using the dataclass(@dataclass) may cause errors when working with older versions(prior to v1.2025.4) of the PlantUML. 
+            Therefore, we will create our own custom elements until the updated version of PlnatUML is widely adopted.
+        
+        Args:
+            node (ClassNode): The class node from which to generate the PlantUML code.
+
+        Returns:
+            str: A PlantUML-formatted class string
+        """
+        
         line = []
         
         if node.type_ == ClassType.ENUM:
@@ -46,6 +67,7 @@ class PlantUMLGenerator:
         elif node.type_ == ClassType.ABSTRACT:
             line.append(f"abstract class {node.name} {{")
         elif node.type_ == ClassType.DATACLASS:
+            # custom dataclass string 
             line.append(f"class {node.name} << (D,#FFDD55) >> {{")
             # >=2025.4 support
             # line.append(f"dataclass {node.name} {{")
@@ -76,30 +98,20 @@ class PlantUMLGenerator:
         return "\n".join(line)
     
     def _generate_relation(self, relation) -> str:
-        """관계를 PlantUML 관계 정의로 변환"""
-        # relation.type_가 Enum인지 확인
-        if hasattr(relation.type_, 'value'):
-            relation_type = relation.type_
-        else:
-            relation_type = relation.type_
+        """Generate a PlantUML relationship definition for the provided relationship.
+        
+        This function returns a PlantUML relationship symbol.
+
+        Args:
+            relation (_type_): The relationship from which to generate the PlantUML code.
+
+        Returns:
+            str: A PlantUML-formatted relationship string.
+        """
+        
+        symbol = self.relation_symbols.get(relation.type_, "--")     
+        return f"{relation.source} {symbol} {relation.target}"
             
-        symbol = self.relation_symbols.get(relation_type, "--")
-        
-        # 관계에 라벨이 있는 경우
-        label = ""
-        if hasattr(relation, 'label') and relation.label:
-            label = f" : {relation.label}"
-        
-        # 다중성 정보가 있는 경우
-        multiplicity = ""
-        if hasattr(relation, 'source_multiplicity') or hasattr(relation, 'target_multiplicity'):
-            source_mult = getattr(relation, 'source_multiplicity', '')
-            target_mult = getattr(relation, 'target_multiplicity', '')
-            if source_mult or target_mult:
-                multiplicity = f' "{source_mult}" {symbol} "{target_mult}"'
-                symbol = ""
-        
-        return f"{relation.source} {symbol}{multiplicity} {relation.target}{label}"
     
     def debug_class_graph(self, class_graph):
         print("=== ClassGraph 디버깅 정보 ===")
@@ -137,22 +149,26 @@ class PlantUMLGenerator:
     def generate_plantuml(self, class_graph, title: str = "Class Diagram") -> str:
         """ClassGraph를 완전한 PlantUML 다이어그램으로 변환"""
         
-        # 디버깅 정보 출력
-        # self.debug_class_graph(class_graph)
-        
         lines = ["@startuml"]
         lines.append(f"title {title}")
         lines.append("")
         
-        # 스타일 설정
+        # Set style
         lines.extend([
             "skinparam classFontStyle bold",
             ""
         ])
         
+        class_exclusion_list = self._config.get('exclude')['classes']
+        
         # 모든 클래스 정의 생성
         if hasattr(class_graph, 'nodes') and class_graph.nodes:
             for node_name, node in class_graph.nodes.items():
+                
+                if class_exclusion_list and \
+                    node.type_.__str__() in class_exclusion_list:
+                        continue
+                    
                 class_def = self._generate_class(node)
                 lines.append(class_def)
                 lines.append("")
@@ -165,9 +181,20 @@ class PlantUMLGenerator:
             lines.append("' Relationships")
             for relation in class_graph.relations:
                 try:
+                    
+                    if class_exclusion_list:
+                        if class_graph.get_node_type(relation.source) in class_exclusion_list or \
+                            class_graph.get_node_type(relation.target) in class_exclusion_list:
+                            continue
+                    
+                    # Do not generate a relationship in the configuration.
+                    if self._config.get('exclude')['relationships'] and \
+                        relation.type_.__str__() in self._config.get('exclude')['relationships']:
+                        continue
+                    
                     rel_def = self._generate_relation(relation)
                     lines.append(rel_def)
-                    print(f"관계 추가됨: {rel_def}")  # 디버깅용
+                    print(f"관계 추가됨: {rel_def}")  
                 except Exception as e:
                     print(f"관계 생성 실패: {e}, 관계: {relation}")
         else:
