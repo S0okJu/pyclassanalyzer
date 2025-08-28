@@ -86,6 +86,13 @@ class GraphScanner:
             project_name = os.path.basename(os.path.abspath(self.path))
             title = f"{project_name} Class Diagram"
         
+        if self.config.get('focus')['is_enable']:
+            focused_graph = self.graph.focus_graph(
+                root=self.config.get('focus')['root'],
+                depths=self.config.get('focus')['depths']
+            )
+            return self.plantuml_generator.save_to_file(focused_graph, output_path, title)
+        
         return self.plantuml_generator.save_to_file(self.graph, output_path, title)
     
     def get_plantuml_content(self, title: Optional[str] = None) -> str:
