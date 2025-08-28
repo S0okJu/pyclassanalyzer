@@ -7,3 +7,8 @@ classes = []
 
 [exception]
 name = "*Exception"
+
+[focus]
+is_enable = true
+root = "Visitor"
+depths = 2

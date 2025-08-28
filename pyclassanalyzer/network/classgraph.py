@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Optional, List, Dict, Set
 from enum import Enum
 
@@ -238,6 +239,57 @@ class ClassGraph(BaseModel):
                 dfs(node_name)
         
         return stack[::-1]
+    
+    def focus_graph(self, root: str, depths: int):
+        """
+        Focus on the graph by filtering the nodes and relations.
+
+        Args:
+            root (str): The root node to focus on.
+            depths (int): The number of depths to focus on.
+
+        Returns:
+            ClassGraph: The focused graph.(New Graph)
+        """
+        if root not in self.nodes:
+            raise ValueError(f"Root node {root} not found in the graph")
+        
+        if depths <= 0:
+            raise ValueError(f"Depth must be greater than 0, but got {depths}")
+        
+        focused_graph = ClassGraph()
+        
+        if depths == 0:
+            focused_graph.add_node(self.nodes[root])
+            return focused_graph
+        
+        node_visited = set([root])
+        edge_visited = set()
+        queue = deque([(root, 0)])
+        
+        while queue:
+            curr_node, curr_level = queue.popleft()
+            
+            focused_graph.add_node(self.nodes[curr_node])
+            
+            # if we haven't reached max dcepth, explore the neighbors
+            if curr_level < depths:
+                for rel in self.get_outgoing_rels(curr_node):
+                    if rel.target not in node_visited:
+                        queue.append((rel.target, curr_level + 1))
+                        node_visited.add(rel.target)
+                        edge_visited.add(rel)
+                        
+        
+        for relation in edge_visited:
+            if relation.source in focused_graph.nodes and \
+                relation.target in focused_graph.nodes:
+                focused_graph.add_relation(relation)
+        
+        return focused_graph
+            
+        
+    
     
         
 
