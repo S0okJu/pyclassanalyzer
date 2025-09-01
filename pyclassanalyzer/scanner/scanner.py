@@ -89,7 +89,8 @@ class GraphScanner:
         if self.config.get('focus')['is_enable']:
             focused_graph = self.graph.focus_graph(
                 root=self.config.get('focus')['root'],
-                depths=self.config.get('focus')['depths']
+                depths=self.config.get('focus')['depths'],
+                types=self.config.get('focus')['type']
             )
             return self.plantuml_generator.save_to_file(focused_graph, output_path, title)
         
