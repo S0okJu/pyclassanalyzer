@@ -11,4 +11,5 @@ name = "*Exception"
 [focus]
 is_enable = true
 root = "Visitor"
-depths = 2
+type = "all" # outgoing, incoming, all
+depths = 1

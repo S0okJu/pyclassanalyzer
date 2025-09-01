@@ -240,13 +240,14 @@ class ClassGraph(BaseModel):
         
         return stack[::-1]
     
-    def focus_graph(self, root: str, depths: int):
+    def focus_graph(self, root: str, depths: int, types: str):
         """
         Focus on the graph by filtering the nodes and relations.
 
         Args:
             root (str): The root node to focus on.
             depths (int): The number of depths to focus on.
+            types (str): The type of relations to focus on. (outgoing, incoming, all)
 
         Returns:
             ClassGraph: The focused graph.(New Graph)
@@ -274,11 +275,19 @@ class ClassGraph(BaseModel):
             
             # if we haven't reached max dcepth, explore the neighbors
             if curr_level < depths:
-                for rel in self.get_outgoing_rels(curr_node):
-                    if rel.target not in node_visited:
-                        queue.append((rel.target, curr_level + 1))
-                        node_visited.add(rel.target)
-                        edge_visited.add(rel)
+                if types == "outgoing" or types == "all":
+                    for rel in self.get_outgoing_rels(curr_node):
+                        if rel.target not in node_visited:
+                            queue.append((rel.target, curr_level + 1))
+                            node_visited.add(rel.target)
+                            edge_visited.add(rel)
+                
+                if types == "incoming" or types == "all":
+                    for rel in self.get_incoming_rels(curr_node):
+                        if rel.source not in node_visited:
+                            queue.append((rel.source, curr_level + 1))
+                            node_visited.add(rel.source)
+                            edge_visited.add(rel)
                         
         
         for relation in edge_visited:
